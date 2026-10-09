@@ -1,0 +1,94 @@
+<mxfile host="Electron">
+  <diagram id="architecture" name="architecture">
+    <mxGraphModel dx="1099" dy="779" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1120" pageHeight="830" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="b1" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f3f8ff;strokeColor=#6c8ebf;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="" vertex="1">
+          <mxGeometry height="110" width="760" x="20" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="b2" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4faf3;strokeColor=#82b366;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="" vertex="1">
+          <mxGeometry height="110" width="760" x="20" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="b3" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fffbea;strokeColor=#d6b656;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="" vertex="1">
+          <mxGeometry height="130" width="760" x="20" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="b4" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f7f2fa;strokeColor=#9673a6;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="" vertex="1">
+          <mxGeometry height="150" width="760" x="20" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="l0" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="LỚP GIAO DIỆN&lt;br&gt;Hiển thị và nhập liệu.&lt;br&gt;Không chứa quy tắc nghiệp vụ." vertex="1">
+          <mxGeometry height="90" width="156" x="30" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="LỚP API (Controller)&lt;br&gt;Xác thực token, kiểm tra&lt;br&gt;đầu vào, đổi kết quả&lt;br&gt;thành mã HTTP." vertex="1">
+          <mxGeometry height="90" width="210" x="30" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="LỚP NGHIỆP VỤ (Service)&lt;br&gt;Chứa MỌI quy tắc BR-01…BR-07,&lt;br&gt;kiểm tra vai trò MANAGER,&lt;br&gt;mở và đóng giao dịch." vertex="1">
+          <mxGeometry height="110" width="210" x="30" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="l3" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="LỚP LƯU TRỮ&lt;br&gt;Repository truy cập PostgreSQL.&lt;br&gt;Tên bảng khớp 100% với ERD&lt;br&gt;(docs/erd.drawio)." vertex="1">
+          <mxGeometry height="130" width="210" x="30" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="ui0" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="M1 Phân công&lt;br&gt;kỹ thuật viên" vertex="1">
+          <mxGeometry height="60" width="160" x="250" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ui1" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="M2 Đặt lịch hẹn&lt;br&gt;giao – nhận máy" vertex="1">
+          <mxGeometry height="60" width="160" x="430" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ui2" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="M3 Phiếu và lịch hẹn&lt;br&gt;của tôi" vertex="1">
+          <mxGeometry height="60" width="160" x="610" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="TicketController&lt;br&gt;GET …/technician-suggestions&lt;br&gt;POST …/assignment" vertex="1">
+          <mxGeometry height="60" width="250" x="250" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="AppointmentController&lt;br&gt;POST /appointments" vertex="1">
+          <mxGeometry height="60" width="250" x="520" y="215" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="AssignService&lt;br&gt;UC1 Gợi ý · UC2 Phân công&lt;br&gt;UC5 Phân công lại" vertex="1">
+          <mxGeometry height="70" width="160" x="250" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="AppointmentService&lt;br&gt;UC3 Đặt lịch · UC4 Trùng lịch&lt;br&gt;UC6–UC8 Xem/Xác nhận" vertex="1">
+          <mxGeometry height="70" width="160" x="430" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="ReminderJob&lt;br&gt;UC9 Nhắc lịch&lt;br&gt;(chạy theo giờ)" vertex="1">
+          <mxGeometry height="70" width="160" x="610" y="385" as="geometry" />
+        </mxCell>
+        <mxCell id="t0" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#111111;fontSize=11;align=center;verticalAlign=middle;fontStyle=1;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="customer" vertex="1">
+          <mxGeometry height="44" width="160" x="250" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="t1" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#111111;fontSize=11;align=center;verticalAlign=middle;fontStyle=1;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="technician" vertex="1">
+          <mxGeometry height="44" width="160" x="430" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="t2" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#111111;fontSize=11;align=center;verticalAlign=middle;fontStyle=1;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="technician_skill" vertex="1">
+          <mxGeometry height="44" width="160" x="610" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="t3" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#111111;fontSize=11;align=center;verticalAlign=middle;fontStyle=1;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="ticket" vertex="1">
+          <mxGeometry height="44" width="160" x="250" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="t4" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#111111;fontSize=11;align=center;verticalAlign=middle;fontStyle=1;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="ticket_assignment" vertex="1">
+          <mxGeometry height="44" width="160" x="430" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="t5" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontColor=#111111;fontSize=11;align=center;verticalAlign=middle;fontStyle=1;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=0;" value="appointment" vertex="1">
+          <mxGeometry height="44" width="160" x="610" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="sms" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#555555;fontColor=#111111;fontSize=10;align=center;verticalAlign=middle;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1.5;dashed=1;" value="Cổng SMS&lt;br&gt;(hệ thống ngoài)" vertex="1">
+          <mxGeometry height="70" width="190" x="900" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" parent="1" style="rounded=0;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff7d6;strokeColor=#d6b656;fontColor=#333333;fontSize=10;align=left;verticalAlign=top;fontStyle=0;spacingLeft=6;spacingTop=4;strokeWidth=1;dashed=0;" value="Chú thích: ▭ = thành phần · mũi tên hai chiều ↕ = luồng trao đổi (nhãn ghi giao thức) · nét đứt = hệ thống ngoài.&lt;br&gt;Màu: xanh dương = giao diện · xanh lá = API · vàng = nghiệp vụ · tím = lưu trữ.&lt;br&gt;NGOÀI PHẠM VI: đăng nhập và cấp token · tạo phiếu bảo hành (L2) · thanh toán · tự động phân công (US9 – WON&#39;T)." vertex="1">
+          <mxGeometry height="100" width="1070" x="20" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" edge="1" parent="1" source="b1" style="endArrow=classic;startArrow=classic;html=1;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;dashed=0;" target="b2" value="HTTPS · REST/JSON · kèm token">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="b2" style="endArrow=classic;startArrow=classic;html=1;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;dashed=0;" target="b3" value="gọi hàm trực tiếp&#xa;(DTO + thông tin người gọi)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="b3" style="endArrow=classic;startArrow=classic;html=1;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;dashed=0;" target="b4" value="gọi Repository · SQL qua driver&#xa;1 giao dịch cho mỗi thao tác">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="b3" style="endArrow=classic;startArrow=none;html=1;strokeWidth=1.5;fontSize=10;labelBackgroundColor=#ffffff;dashed=1;" target="sms" value="HTTPS REST&#xa;gửi tin nhắc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
