@@ -1,72 +1,54 @@
-# Smart CRM - Quản lý và phân công công việc
+# Smart CRM – Mekong Mobile · Luồng L4: Phân công kỹ thuật viên và lịch hẹn
 
-**Sinh viên:** Nguyễn Trọng Hải - 2374802010126
-**Track:** SE
-**Học phần:** Chuyên đề Tốt nghiệp 1 – Trường ĐH Văn Lang
+- **Học phần:** Chuyên đề tốt nghiệp 1 · Bài tập 1
+- **Track:** SE (API contract)
+- **Luồng nghiệp vụ:** L4 – phân công kỹ thuật viên cho phiếu bảo hành theo tay nghề, địa bàn, khối lượng công việc; đặt lịch hẹn giao – nhận máy và kiểm tra trùng lịch.
 
-## 1. Mô tả bài toán[cite: 16]
-**Luồng nghiệp vụ:** Chuẩn bị dữ liệu phiếu mẫu -> Đánh giá tiêu chí (tay nghề, địa bàn, khối lượng công việc) -> Phân công kỹ thuật viên -> Đặt lịch hẹn giao nhận -> Kiểm tra trùng lịch.
+## Cách mở các file thiết kế
 
-## 2. Phạm vi
-**Phần thực hiện (Làm):**
-* Quản lý thông tin và kỹ năng kỹ thuật viên.
-* Phân công kỹ thuật viên dựa theo tay nghề, địa bàn và khối lượng công việc hiện tại.
-* Quản lý các phiếu yêu cầu.
-* Đặt lịch hẹn giao – nhận máy cho khách hàng.
-* Kiểm tra và cảnh báo trùng lịch hẹn.
+| File | Nội dung | Mở bằng |
+|------|----------|---------|
+| `docs/srs.md` | SRS rút gọn 6 mục, bảng truy vết | Trình xem Markdown |
+| `docs/user-stories.md` | 7 User Story, INVEST, MoSCoW, Given–When–Then | Trình xem Markdown |
+| `docs/usecase.drawio` | Use Case Diagram | draw.io |
+| `docs/architecture.drawio`, `docs/architecture.md` | Kiến trúc 4 lớp và ba câu lập luận | draw.io, Markdown |
+| `docs/erd.drawio` | ERD 6 bảng | draw.io |
+| `docs/wireframe.drawio`, `docs/wireframe.md` | Wireframe M1, M2, M3 và bảng đối chiếu | draw.io, Markdown |
+| `docs/api-contract.md` | API contract Track SE | Markdown |
+| `docs/consistency-check.md` | Kết quả 6 phép kiểm nhất quán | Markdown |
+| `docs/ai-declaration.md` | Khai báo sử dụng công cụ AI | Markdown |
+| `docs/export/*.png` | Ảnh xuất chèn vào PDF | Trình xem ảnh |
+| `db/schema.sql`, `db/seed.sql` | DDL PostgreSQL và dữ liệu mẫu | `psql -f` |
+| `tools/build_bt1_pdf.py` | Gộp toàn bộ thành file PDF nộp bài | `python3 tools/build_bt1_pdf.py` |
 
-**Phần ngoài phạm vi (Không làm):**
-* Không làm chức năng khởi tạo yêu cầu ban đầu vì yêu cầu này được xác định là đã tồn tại.
+## 2. Môi trường
 
-## 3. Công nghệ sử dụng
+Chưa cài PostgreSQL hoặc đang chuyển từ MongoDB: xem `docs/huong-dan-cai-dat-postgresql.md`.
 
-| Thành phần | Công nghệ |
-| :--- | :--- |
-| **Frontend** | HTML/CSS/JS kết hợp AJAX.|
-| **Backend** | Node.js (ExpressJS).|
-| **Database** | MongoDB Atlas, Porte.|
-| **Tools** | Git.|
-| **Deployment** | Vercel, Render hoặc Railway. |
+- Node.js 20 trở lên, PostgreSQL 16 (cần extension `btree_gist`).
+- Sao chép `.env.example` thành `.env` và sửa `DATABASE_URL`, `PORT`; `TEST_DATABASE_URL` trỏ tới một CSDL riêng cho kiểm thử.
 
-## 4. Cấu trúc thư mục
+```bash
+createdb mekong_l4
+npm install
+npm run migrate   # chạy db/schema.sql, chạy lại không lỗi
+npm run seed      # dữ liệu mẫu, chạy lại không nhân đôi
+npm start         # http://localhost:3000/health
+npm test          # 22 test (unit + tích hợp trên PostgreSQL thật)
+```
 
-Dự án được tổ chức với cấu trúc thư mục như sau:
+Xác thực giả lập (đăng nhập ngoài phạm vi): gửi header `X-User`, `X-Role` (MANAGER, TECHNICIAN, CUSTOMER), `X-User-Code`.
 
-```text
-smartcrm-2374802010126-PhanCongCongViecVaLichHenMekongMobile/
-├── docs/diagrams           # Thư mục chứa tài liệu, sơ đồ dự án
-├── src/                    # Thư mục chứa mã nguồn chính
-│   ├── backend/            # Mã nguồn máy chủ (Node.js/Express)
-│   │   ├── node_modules/   # Chứa các gói thư viện cài đặt qua npm
-│   │   ├── .gitkeep        # Giữ cấu trúc thư mục khi push lên Git
-│   │   ├── package-lock.json
-│   │   ├── package.json    # File quản lý cấu hình và thư viện backend
-│   │   └── server.js       # File khởi chạy server và kết nối CSDL
-│   └── frontend/           # Mã nguồn giao diện người dùng
-│       └── .gitkeep
-├── tests/                  # Thư mục chứa các kịch bản kiểm thử (testing)
-├── .env                    # (Bị ẩn trên Git) File cấu hình môi trường thật
-├── .env.example            # File mẫu danh sách các biến môi trường
-├── .gitignore              # Cấu hình bỏ qua các file/thư mục khi commit
-└── README.md               # Tài liệu giới thiệu và hướng dẫn dự án
+## 6. Tình trạng hiện tại
 
+| Hạng mục | Trạng thái |
+|----------|-----------|
+| FR1 gợi ý kỹ thuật viên | Xong |
+| FR2 phân công, ghi lịch sử | Xong |
+| FR4, FR5 đặt lịch, chống trùng | Xong |
+| FR6 kỹ thuật viên xem lịch của mình; FR8 xác nhận; hủy mềm (CRUD `appointments`) | Xong |
+| NFR2 đồng thời (khóa dòng và EXCLUDE) | Xong, có test 10 và 4 yêu cầu song song |
+| FR3 phân công lại (chuyển kỹ thuật viên), FR7 khách xem lịch qua giao diện | Chưa làm |
+| Giao diện M1–M3 | Chưa làm (chỉ có wireframe) |
 
-## 5. Hướng dẫn cài đặt & chạy
-
-Để khởi chạy dự án trên máy cá nhân, vui lòng thực hiện theo các bước sau:
-
-**Bước 1: Thiết lập môi trường**
-- Tại thư mục gốc của dự án, tạo một file trống tên là `.env` (ngang hàng với file `.env.example`).
-- Copy nội dung từ `.env.example` sang `.env`.
-- Cập nhật chuỗi kết nối MongoDB Atlas thật của bạn vào biến `MONGODB_URI`.
-
-**Bước 2: Cài đặt thư viện (Dependencies)**
-- Mở terminal và di chuyển vào thư mục backend:
-  ```bash
-  cd src/backend
-
-## 6. Khai báo sử dụng công cụ AI
-
-| Công cụ | Dùng vào việc gì | Cách tự kiểm chứng |
-| :--- | :--- | :--- |
-| Gemini| hỗ trợ tạo mã, hướng dẫn setup môi trường và sử dụng Git | tạo một dự án mẫu kiểm chứng kết quả rồi mới áp dụng vào dự án chính khi đã thành công|
+Bằng chứng chạy: `docs/anh-ket-qua/`. Nhật ký thay đổi thiết kế: `docs/thay-doi-thiet-ke.md`.
