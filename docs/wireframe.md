@@ -48,3 +48,29 @@ Sơ đồ gốc: `docs/wireframe.drawio` · Ảnh xuất: `docs/export/wireframe
 | API 400 | Giờ hẹn ngoài khoảng cho phép hoặc thời lượng sai | M2, dưới ô Thời lượng |
 | API 409 `APPOINTMENT_CONFLICT` | Kỹ thuật viên đã có lịch trong khung giờ, kèm nút Chọn giờ khác | M2, trên nút Đặt lịch hẹn |
 | API 409 `TECHNICIAN_NOT_ASSIGNED` | Kỹ thuật viên không phụ trách phiếu | M2, dưới ô Kỹ thuật viên phụ trách |
+
+## 4. Hiện thực wireframe (Sprint 2)
+
+Giao diện web đã đối chiếu từng khối với ba wireframe ở trên (lần chỉnh ngày 23/10/2026, TD-14).
+
+| Wireframe | Khối trong wireframe | Hiện thực | File |
+|-----------|----------------------|-----------|------|
+| M1 Phân công kỹ thuật viên | Mã phiếu + nút Tìm phiếu | Ô tìm phiếu, kiểm tra định dạng `T-YYYY-NNNN`, chuyển tới chi tiết | `components/TicketSearch.js` |
+| | Hộp thông tin phiếu | Khách, thiết bị, tay nghề, địa bàn, kỹ thuật viên hiện tại | `TicketDetailPage.js` |
+| | [1a] đã có kỹ thuật viên | Thông báo đỏ "Vui lòng dùng chức năng Phân công lại" | `TicketDetailPage.js` |
+| | Bảng gợi ý + nút Phân công; [2a] rỗng | Bảng 4 cột, thông báo rỗng theo địa bàn | `TicketDetailPage.js` |
+| | [4a][4b] đủ 8 phiếu / hết điều kiện | Thông báo 409 và tự làm mới danh sách gợi ý | `TicketDetailPage.js` |
+| | Ghi chú ≤ 255 ký tự | Ô ghi chú, gửi kèm khi phân công | `TicketDetailPage.js` |
+| | Lý do + nút Phân công lại | Hoạt động (FR3, TD-15): bảng kỹ thuật viên thay thế, lý do bắt buộc, lịch hẹn chuyển theo | `TicketDetailPage.js` |
+| | Lịch sử phân công | Bảng thời điểm, kỹ thuật viên, hành động, người thực hiện, ghi chú | `TicketDetailPage.js` |
+| M2 Đặt lịch hẹn | Mã phiếu; kỹ thuật viên phụ trách | Tìm phiếu rồi tự điền kỹ thuật viên (chỉ đọc) | `AppointmentPage.js` |
+| | Loại lịch hẹn | Hai nút chọn DROP_OFF, PICK_UP | `AppointmentPage.js` |
+| | Ngày giờ, thời lượng, kết thúc dự kiến | Ô ngày giờ, ô phút 15–120, giờ kết thúc tính tức thì | `AppointmentPage.js`, `ui.js` |
+| | [400] ngoài giờ; [409] trùng lịch + Chọn giờ khác | Thông báo từ API, nút đưa con trỏ về ô giờ | `AppointmentPage.js` |
+| | Lịch hẹn đã có của kỹ thuật viên trong ngày | Bảng lọc theo kỹ thuật viên và ngày, bỏ lịch đã hủy | `AppointmentPage.js` |
+| M3 Phiếu và lịch hẹn của tôi | Hai tab Phiếu \| Lịch hẹn | Kỹ thuật viên: "Phiếu được giao"; khách: "Phiếu của tôi" | `MyWorkPage.js` |
+| | Bảng phiếu 4 cột; rỗng | Mã phiếu, khách hàng, thiết bị, trạng thái; "Chưa có phiếu nào được giao" | `TicketListPage.js` |
+| | Bảng lịch hẹn + nút Xác nhận; phân quyền hiển thị | Chỉ hiện Xác nhận khi Chờ xác nhận và không phải kỹ thuật viên; dữ liệu lọc ở server | `AppointmentPage.js` |
+| (thêm) Đăng nhập | – | Cần cho token 60 phút và luồng 401 | `LoginPage.js` |
+
+Khác biệt có chủ đích so với bản vẽ: (1) trạng thái hiển thị bằng nhãn tiếng Việt thay vì mã; (2) màn quản lý có thêm danh sách phiếu và danh sách tất cả lịch hẹn để điều hướng; (3) bản vẽ M3 ghi chú phân quyền cho nhà phát triển nên giao diện chỉ hiện một dòng gợi ý ngắn cho người dùng.
