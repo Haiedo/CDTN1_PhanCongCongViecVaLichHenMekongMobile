@@ -26,12 +26,13 @@ async function create(body, user, now = new Date()) {
   const input = validateAppointmentInput(body, now);
   try {
     return await withTransaction(async (tx) => {
-      const ticket = await ticketRepo.findByCode(tx, input.ticketCode);
-      if (!ticket) throw new AppError(404, 'TICKET_NOT_FOUND', `Không tìm thấy phiếu ${input.ticketCode}.`);
       // Khóa dòng kỹ thuật viên: các yêu cầu đặt lịch của CÙNG một kỹ thuật viên xếp hàng nhau.
       // Nếu không khóa, hai INSERT chồng nhau chờ nhau và PostgreSQL báo deadlock (40P01) → lỗi 500.
       const tech = await technicianRepo.findByCode(tx, input.technicianCode, { forUpdate: true });
       if (!tech) throw new AppError(404, 'TECHNICIAN_NOT_FOUND', `Không tìm thấy kỹ thuật viên ${input.technicianCode}.`);
+      // Đọc phiếu SAU khi khóa kỹ thuật viên: nếu quản lý khác vừa phân công lại (FR3) thì thấy người phụ trách mới
+      const ticket = await ticketRepo.findByCode(tx, input.ticketCode);
+      if (!ticket) throw new AppError(404, 'TICKET_NOT_FOUND', `Không tìm thấy phiếu ${input.ticketCode}.`);
       if (ticket.technician_id !== tech.technician_id)                                          // BR-07
         throw new AppError(409, 'TECHNICIAN_NOT_ASSIGNED', 'Kỹ thuật viên không phải người đang phụ trách phiếu này.');
       const clash = await appointmentRepo.findOverlap(tx, tech.technician_id, input.startAt, input.endAt); // UC4
@@ -52,9 +53,13 @@ async function create(body, user, now = new Date()) {
   }
 }
 
-// FR6 – danh sách. Kỹ thuật viên chỉ thấy lịch của chính mình (NFR3).
+// FR6, FR7 – danh sách. Kỹ thuật viên chỉ thấy lịch của mình; khách chỉ thấy lịch của phiếu mình (NFR3).
 async function list(filters, user) {
   const f = { ...filters };
+  if (user.role === 'CUSTOMER') {
+    if (!user.code) throw new AppError(403, 'FORBIDDEN', 'Thiếu mã khách hàng (X-User-Code).');
+    f.customerPhone = user.code;
+  }
   if (user.role === 'TECHNICIAN') {
     if (!user.code) throw new AppError(403, 'FORBIDDEN', 'Thiếu X-User-Code của kỹ thuật viên.');
     f.technicianCode = user.code;
@@ -66,6 +71,8 @@ async function get(code, user) {
   if (!r) throw new AppError(404, 'APPOINTMENT_NOT_FOUND', `Không tìm thấy lịch hẹn ${code}.`);
   if (user.role === 'TECHNICIAN' && r.technician_code !== user.code)
     throw new AppError(403, 'FORBIDDEN', 'Chỉ được xem lịch hẹn của chính mình.');
+  if (user.role === 'CUSTOMER' && r.customer_phone !== user.code)
+    throw new AppError(403, 'FORBIDDEN', 'Chỉ được xem lịch hẹn của phiếu mình.');
   return toApi(r);
 }
 
@@ -76,9 +83,13 @@ async function changeStatus(code, status, user) {
     throw new AppError(400, 'VALIDATION_ERROR', 'status chỉ nhận CONFIRMED hoặc CANCELLED.', { details: ['status'] });
   if (status === 'CANCELLED' && user.role !== 'MANAGER')
     throw new AppError(403, 'FORBIDDEN', 'Chỉ quản lý trung tâm được hủy lịch hẹn.');
+  if (user.role === 'TECHNICIAN')
+    throw new AppError(403, 'FORBIDDEN', 'Kỹ thuật viên không được đổi trạng thái lịch hẹn.');
   return withTransaction(async (tx) => {
     const r = await appointmentRepo.findByCode(tx, code, { forUpdate: true });
     if (!r) throw new AppError(404, 'APPOINTMENT_NOT_FOUND', `Không tìm thấy lịch hẹn ${code}.`);
+    if (user.role === 'CUSTOMER' && r.customer_phone !== user.code)
+      throw new AppError(403, 'FORBIDDEN', 'Chỉ được xác nhận lịch hẹn của phiếu mình.');
     if (!TRANSITIONS[r.status].includes(status))
       throw new AppError(409, 'INVALID_STATUS_TRANSITION', `Không thể chuyển lịch hẹn từ ${r.status} sang ${status}.`);
     return toApi(await appointmentRepo.setStatus(tx, code, status));
