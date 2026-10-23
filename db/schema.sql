@@ -68,7 +68,7 @@ CREATE TABLE ticket_assignment (
     CONSTRAINT ck_reassign_reason CHECK (action = 'ASSIGN' OR reason IS NOT NULL)   -- FR3: lý do bắt buộc
 );
 
--- 6. appointment: lịch hẹn giao – nhận máy (FR4–FR9)
+-- 6. appointment: lịch hẹn giao – nhận máy (FR4–FR8)
 --    Lưu start_at + end_at (khoảng thời gian); thời lượng được tính ra, không lưu.
 CREATE TABLE appointment (
     appointment_id    BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
