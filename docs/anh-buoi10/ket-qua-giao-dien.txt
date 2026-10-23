@@ -1,0 +1,20 @@
+Kiểm tra giao diện trên trình duyệt Chromium (Playwright), backend thật + PostgreSQL 16, dữ liệu db/seed.sql. Ngày 23/10/2026.
+OK  Đăng nhập sai mật khẩu → thông báo lỗi
+OK  quanly01 → danh sách phiếu 3 dòng; lọc "Hoàn tất" → trạng thái RỖNG
+OK  Tìm phiếu: "sai" → báo sai định dạng; T-2026-0042 → mở chi tiết, bảng gợi ý
+OK  Nhập ghi chú, bấm Phân công TECH-007 → "Đã phân công TECH-007…"; lịch sử có dòng ghi chú
+OK  Phiếu đã phân công: khối Phân công lại có bảng kỹ thuật viên thay thế và ô lý do (FR3, TD-15)
+OK  "Đặt lịch hẹn cho phiếu này" → ô kỹ thuật viên tự điền TECH-007 · Trần Thị Bích
+OK  Giờ kết thúc dự kiến: 09:00 + 30 phút = 09:30; đổi 45 phút → 09:45
+OK  Đặt lịch thứ Hai 26/10/2026 09:00 → "Đã tạo lịch hẹn APT-0001"; bảng lịch trong ngày có APT-0001
+OK  Đặt 09:15 → 409 nêu APT-0001 09:00–09:30, có nút "Chọn giờ khác" (bấm: xóa thông báo, trỏ về ô giờ)
+OK  Đặt 07:00 → 400 "lịch hẹn phải nằm trong 08:00–17:30"
+OK  khach01 → hai tab "Phiếu của tôi | Lịch hẹn"; tab Lịch hẹn có nút Xác nhận; xác nhận xong nút biến mất
+OK  ktv.an → tab Lịch hẹn rỗng "Chưa có lịch hẹn nào."; tab "Phiếu được giao" có phiếu
+OK  Tắt backend → "Không kết nối được máy chủ…" kèm nút Thử lại
+OK  Trạng thái "đã phân công hết": danh sách vẫn có nút Đặt lịch hẹn và Phân công lại ở mỗi dòng
+OK  Phân công lại để trống lý do → bị chặn "Vui lòng nhập lý do phân công lại."
+OK  Nhập lý do, chuyển T-2026-0042 sang TECH-003 → thành công; lịch sử có dòng REASSIGN kèm lý do
+OK  npm run demo:reset → dữ liệu mẫu trở về trạng thái ban đầu
+OK  Kiểm tra bố cục tự động ở 5 độ rộng (1536, 1280, 1024, 768, 390 px) × 3 vai trò × 8 màn: không tràn ngang trang; không bảng nào phải cuộn ngang từ 1024 px trở lên (ở 390 px bảng cuộn trong khung của nó)
+Lỗi JavaScript trong console: 0. Số lần gọi fetch( trong pages/ và components/: 0.

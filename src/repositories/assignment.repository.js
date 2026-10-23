@@ -10,4 +10,11 @@ async function insert(db, { ticketId, technicianId, action, reason = null, note 
       WHERE assignment_id = $1 RETURNING assignment_code, assigned_at`, [ins.rows[0].assignment_id]);
   return rows[0];
 }
-module.exports = { insert };
+async function listByTicket(db, ticketId) {
+  const { rows } = await db.query(
+    `SELECT a.assignment_code, te.technician_code, a.action, a.reason, a.note, a.assigned_by, a.assigned_at
+       FROM ticket_assignment a JOIN technician te ON te.technician_id = a.technician_id
+      WHERE a.ticket_id = $1 ORDER BY a.assigned_at DESC, a.assignment_id DESC`, [ticketId]);
+  return rows;
+}
+module.exports = { insert, listByTicket };

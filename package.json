@@ -1,13 +1,15 @@
 {
   "name": "warranty-app-l4",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Smart CRM – Mekong Mobile · L4 Phân công kỹ thuật viên và lịch hẹn (Track SE, Node + PostgreSQL)",
   "main": "src/server.js",
   "scripts": {
     "migrate": "node src/db/migrate.js",
     "seed": "node src/db/migrate.js --seed",
     "start": "node src/server.js",
-    "test": "node --test --test-concurrency=1 test/validation.test.js test/api.integration.test.js"
+    "e2e": "node scripts/e2e.js",
+    "demo:reset": "node scripts/reset-demo.js",
+    "test": "node --test --test-concurrency=1 test/validation.test.js test/token.test.js test/client.test.js test/api.integration.test.js"
   },
   "engines": { "node": ">=20" },
   "dependencies": { "dotenv": "^16.4.5", "express": "^4.19.2", "pg": "^8.12.0" }

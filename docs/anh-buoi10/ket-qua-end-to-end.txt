@@ -1,0 +1,60 @@
+
+> warranty-app-l4@0.2.0 e2e
+> node scripts/e2e.js
+
+Đã áp dụng 001_schema (db/schema.sql)
+Đã nạp dữ liệu mẫu (db/seed.sql)
+
+===== LUỒNG CHÍNH L4: PHÂN CÔNG KỸ THUẬT VIÊN VÀ ĐẶT LỊCH HẸN (dữ liệu mẫu db/seed.sql) =====
+
+[Bước 1] Quản lý đăng nhập
+  vào : POST /auth/login {"username":"quanly01","password":"demo123"}
+  ra  : HTTP 200 ✔  {"token":"<đã ẩn>","token_type":"Bearer","expires_in":3600,"user":{"name":"quanly01","full_name":"Quản lý trung tâm","role":"MANAGER","code":null}}
+
+[Bước 2] Xem các phiếu đang chờ phân công
+  vào : GET /tickets?status=WAITING_ASSIGNMENT
+  ra  : HTTP 200 ✔  {"data":[{"ticket_code":"T-2026-0042","status":"WAITING_ASSIGNMENT","device_model":"iPhone 14 Pro","required_skill":"SCREEN_REPAIR","service_area":"Quận 7","customer":{"full_name":"Lê Minh Châu","phone":"0901234567"},"te
+
+[Bước 3] Gợi ý kỹ thuật viên cho phiếu T-2026-0042 (UC1)
+  vào : GET /tickets/T-2026-0042/technician-suggestions
+  ra  : HTTP 200 ✔  {"ticket_code":"T-2026-0042","required_skill":"SCREEN_REPAIR","service_area":"Quận 7","suggestions":[{"technician_code":"TECH-007","full_name":"Trần Thị Bích","skill_level":2,"open_tickets":0,"max_open_tickets":8},{"tech
+
+[Bước 4] Phân công TECH-007 cho phiếu T-2026-0042 (UC2)
+  vào : POST /tickets/T-2026-0042/assignment {"technician_code":"TECH-007"}
+  ra  : HTTP 201 ✔  {"assignment_code":"ASG-0001","ticket_code":"T-2026-0042","technician_code":"TECH-007","ticket_status":"ASSIGNED","technician_open_tickets":1,"assigned_at":"2026-10-23T15:03:12+07:00"}
+
+[Bước 5] Xem lại chi tiết phiếu: đã phân công, có lịch sử
+  vào : GET /tickets/T-2026-0042
+  ra  : HTTP 200 ✔  {"ticket_code":"T-2026-0042","status":"ASSIGNED","device_model":"iPhone 14 Pro","required_skill":"SCREEN_REPAIR","service_area":"Quận 7","customer":{"full_name":"Lê Minh Châu","phone":"0901234567"},"technician":{"technic
+
+[Bước 6] Đặt lịch giao máy 09:00, 30 phút (UC3)
+  vào : POST /appointments {"ticket_code":"T-2026-0042","technician_code":"TECH-007","type":"DROP_OFF","start_at":"2026-10-26T09:00:00+07:00","duration_minutes":30}
+  ra  : HTTP 201 ✔  {"appointment_code":"APT-0001","ticket_code":"T-2026-0042","technician_code":"TECH-007","type":"DROP_OFF","start_at":"2026-10-26T09:00:00+07:00","end_at":"2026-10-26T09:30:00+07:00","status":"PENDING_CONFIRMATION"}
+
+[Bước 7] Đặt lịch chồng 09:15 cho cùng kỹ thuật viên → bị từ chối (UC4)
+  vào : POST /appointments {"ticket_code":"T-2026-0042","technician_code":"TECH-007","type":"PICK_UP","start_at":"2026-10-26T09:15:00+07:00","duration_minutes":30}
+  ra  : HTTP 409 ✔  {"error":{"code":"APPOINTMENT_CONFLICT","message":"Kỹ thuật viên TECH-007 đã có lịch hẹn trong khung giờ này.","conflicting_appointment":{"appointment_code":"APT-0001","start_at":"2026-10-26T09:00:00+07:00","end_at":"202
+
+[Bước 8] Khách hàng đăng nhập
+  vào : POST /auth/login {"username":"khach01","password":"demo123"}
+  ra  : HTTP 200 ✔  {"token":"<đã ẩn>","token_type":"Bearer","expires_in":3600,"user":{"name":"khach01","full_name":"Lê Minh Châu","role":"CUSTOMER","code":"0901234567"}}
+
+[Bước 9] Khách xem lịch hẹn của phiếu mình (FR7)
+  vào : GET /appointments
+  ra  : HTTP 200 ✔  {"data":[{"appointment_code":"APT-0001","ticket_code":"T-2026-0042","technician_code":"TECH-007","type":"DROP_OFF","start_at":"2026-10-26T09:00:00+07:00","end_at":"2026-10-26T09:30:00+07:00","status":"PENDING_CONFIRMATIO
+
+[Bước 10] Khách xác nhận lịch APT-0001 (FR8)
+  vào : PATCH /appointments/APT-0001 {"status":"CONFIRMED"}
+  ra  : HTTP 200 ✔  {"appointment_code":"APT-0001","ticket_code":"T-2026-0042","technician_code":"TECH-007","type":"DROP_OFF","start_at":"2026-10-26T09:00:00+07:00","end_at":"2026-10-26T09:30:00+07:00","status":"CONFIRMED"}
+
+[Bước 11] Kỹ thuật viên đăng nhập
+  vào : POST /auth/login {"username":"ktv.bich","password":"demo123"}
+  ra  : HTTP 200 ✔  {"token":"<đã ẩn>","token_type":"Bearer","expires_in":3600,"user":{"name":"ktv.bich","full_name":"Trần Thị Bích","role":"TECHNICIAN","code":"TECH-007"}}
+
+[Bước 12] Kỹ thuật viên chỉ thấy lịch của mình (FR6)
+  vào : GET /appointments
+  ra  : HTTP 200 ✔  {"data":[{"appointment_code":"APT-0001","ticket_code":"T-2026-0042","technician_code":"TECH-007","type":"DROP_OFF","start_at":"2026-10-26T09:00:00+07:00","end_at":"2026-10-26T09:30:00+07:00","status":"CONFIRMED"}]}
+
+Đối chiếu đầu ra: phiếu T-2026-0042 → TECH-007; lịch APT-0001 = CONFIRMED; kỹ thuật viên thấy 1 lịch → ✔ khớp
+
+===== KẾT QUẢ END-TO-END: 12/12 bước đạt, 0 lỗi =====

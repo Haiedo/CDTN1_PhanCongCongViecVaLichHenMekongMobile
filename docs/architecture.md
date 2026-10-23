@@ -13,7 +13,9 @@ Sơ đồ gốc: `docs/architecture.drawio` · Ảnh xuất: `docs/export/archit
 | Nghiệp vụ (Service) | Mọi quy tắc BR-01 đến BR-07, kiểm tra vai trò, mở và đóng giao dịch | `AssignService`, `AppointmentService` | Gọi Repository, một giao dịch cho mỗi thao tác |
 | Lưu trữ | Truy cập PostgreSQL qua driver | `customer`, `technician`, `technician_skill`, `ticket`, `ticket_assignment`, `appointment` | SQL |
 
-**Ngoài phạm vi:** đăng nhập và cấp token, tạo phiếu bảo hành (L2), thanh toán, nhắc lịch qua SMS và tự động phân công (WON'T).
+**Ngoài phạm vi:** hệ thống tài khoản thật (dùng 4 tài khoản demo cấp token 60 phút), tạo phiếu bảo hành (L2), thanh toán, nhắc lịch qua SMS và tự động phân công (WON'T).
+
+**Hiện thực (Sprint 2):** lớp Giao diện = `src/frontend/` (`pages/`, `components/DataState.js`, `api/`); lớp API = `src/routes/`; lớp Nghiệp vụ = `src/services/`; lớp Lưu trữ = `src/repositories/`. Giao diện chỉ gọi API qua `src/frontend/api/`, không gọi thẳng CSDL.
 
 ## 2. Ba câu lập luận
 
