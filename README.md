@@ -37,7 +37,7 @@ Làm lần lượt từng bước. Clone **đúng tag `v0.2`** vào một thư m
 | 7 | `psql -U postgres -h localhost -c "CREATE DATABASE mekong_l4_test;"` | `CREATE DATABASE` (CSDL riêng cho test, bị xóa sạch mỗi lần test) |
 | 8 | `npm run migrate` | `Đã áp dụng 001_schema (db/schema.sql)` |
 | 9 | `npm run seed` | `Đã nạp dữ liệu mẫu (db/seed.sql)` |
-| 10 | `npm test` | cuối kết quả có `# tests 69`, `# pass 69`, `# fail 0` |
+| 10 | `npm test` | cuối kết quả có `tests 69`, `pass 69`, `fail 0` (đầu dòng là `ℹ` hoặc `#` tùy phiên bản Node) |
 | 11 | `npm run e2e` | `KẾT QUẢ END-TO-END: 12/12 bước đạt, 0 lỗi` |
 | 12 | `npm start` | `API chạy tại http://localhost:3000`; mở địa chỉ đó trong trình duyệt để vào giao diện |
 
@@ -110,10 +110,23 @@ curl -s $H localhost:3000/api/v1/tickets/T-2026-0042/technician-suggestions
 PowerShell (viết thân JSON bằng UTF-8 để giữ dấu tiếng Việt):
 
 ```powershell
-$h = @{ 'X-User' = 'quanly01'; 'X-Role' = 'MANAGER' }
-$body = '{"customer_phone":"0912345678","device_model":"iPad Air","required_skill":"SCREEN_REPAIR","service_area":"Quận 7"}'
-Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/v1/tickets -Headers $h -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body))
-Invoke-RestMethod -Uri http://localhost:3000/api/v1/tickets -Headers $h
+$h = @{ 'X-User'='quanly01'; 'X-Role'='MANAGER' }
+$u = 'http://localhost:3000/api/v1/tickets'
+function Send($m, $url, $json) {
+  $p = @{ Method=$m; Uri=$url; Headers=$h; ContentType='application/json; charset=utf-8'; UseBasicParsing=$true }
+  if ($json) { $p.Body = [Text.Encoding]::UTF8.GetBytes($json) }
+  try   { $r = Invoke-WebRequest @p; "HTTP $([int]$r.StatusCode)"; $r.Content }
+  catch { "HTTP $([int]$_.Exception.Response.StatusCode)"; $_.ErrorDetails.Message }
+}
+"=== 1. CREATE (mong đợi HTTP 201) ==="
+$r1 = Send Post $u '{"customer_phone":"0912345678","device_model":"iPad Air","required_skill":"SCREEN_REPAIR","service_area":"Quận 7"}'
+$r1
+$code = ($r1[1] | ConvertFrom-Json).ticket_code      # mã vừa tạo, ví dụ T-2026-0045
+"=== 2. READ (HTTP 200) ===";                 Send Get    "$u/$code" $null
+"=== 3. UPDATE (HTTP 200) ===";               Send Patch  "$u/$code" '{"device_model":"iPad Pro"}'
+"=== 4. DELETE (HTTP 200) ===";               Send Delete "$u/$code" $null
+"=== 5. DỮ LIỆU SAI (HTTP 400 VALIDATION_ERROR) ==="
+Send Post $u '{"device_model":"iPad"}'
 ```
 
 Danh sách đầy đủ endpoint, JSON mẫu, mã lỗi và bảng validation: [`docs/api-contract.md`](docs/api-contract.md). Kiểm tra sức khỏe: `GET /health` → `{"status":"ok","database":"up"}`, hoặc `503` khi PostgreSQL không trả lời.
