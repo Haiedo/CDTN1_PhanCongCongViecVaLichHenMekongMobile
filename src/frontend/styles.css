@@ -48,6 +48,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .banner { padding: 10px 14px; border-radius: 8px; margin: 0 0 14px; border: 1px solid transparent; }
 .banner-ok { background: var(--ok-bg); color: var(--ok-ink); border-color: #b9e0c6; }
 .banner-error { background: var(--err-bg); color: var(--err-ink); border-color: #f0bcbc; }
+.banner-info { background: #e8f1fb; color: #1d4f8c; border-color: #b8d3f0; }
 .banner-warn { background: var(--warn-bg); color: var(--warn-ink); border-color: #f1d6a3; }
 .state { padding: 18px; text-align: center; border-radius: 10px; margin: 0; }
 .state-loading { color: var(--muted); } .state-empty { color: var(--muted); background: var(--surface); border: 1px dashed var(--line); }

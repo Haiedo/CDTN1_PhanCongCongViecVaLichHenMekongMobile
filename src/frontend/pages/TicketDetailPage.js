@@ -1,6 +1,6 @@
 // Màn hình – CHI TIẾT phiếu (GET /tickets/{mã}) + gợi ý và phân công kỹ thuật viên (wireframe M1: UC1, UC2).
 // Bố cục theo M1: tìm phiếu → thông tin phiếu → kỹ thuật viên gợi ý → ghi chú → (phân công lại) → lịch sử phân công.
-import { h, table, ticketBadge, banner, fmtTime, SKILL } from '../components/ui.js';
+import { h, table, ticketBadge, banner, fmtTime, SKILL, TICKET_STATUS } from '../components/ui.js';
 import { mountDataState } from '../components/DataState.js';
 import { TicketSearch } from '../components/TicketSearch.js';
 import { getTicket, getSuggestions, assignTechnician, reassignTechnician } from '../api/ticket.api.js';
@@ -43,7 +43,9 @@ export function TicketDetailPage(container, { user, params }) {
     }
     if (user.role === 'MANAGER' && t.status !== 'WAITING_ASSIGNMENT') {
       // [1a] Phiếu đã có kỹ thuật viên: không phân công lần đầu nữa; dùng Phân công lại (FR3, UC5)
-      el.append(banner('error', `Phiếu ${t.ticket_code} đã có kỹ thuật viên phụ trách. Vui lòng dùng chức năng Phân công lại.`));
+      el.append(banner('info', t.status === 'ASSIGNED'
+        ? `Phiếu ${t.ticket_code} đã có kỹ thuật viên phụ trách. Muốn đổi người, dùng chức năng Phân công lại bên dưới.`
+        : `Phiếu ${t.ticket_code} đang ở trạng thái ${TICKET_STATUS[t.status] || t.status}, không phân công lại được.`));
       if (t.status === 'ASSIGNED' && t.technician) {
         const reason = h('input', { id: 'reassign-reason', maxlength: 255, placeholder: 'Kỹ thuật viên nghỉ đột xuất' });
         const box = h('div', {}); const rnotice = h('div', {});
