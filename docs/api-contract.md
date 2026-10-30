@@ -9,8 +9,11 @@ Dữ liệu mẫu dưới đây là dữ liệu giả lập của case study Mek
 |-------------|-----------|----------|-------|
 | POST | `/auth/login` | Đăng nhập, nhận token 60 phút (không cần token) | – |
 | GET | `/auth/me` | Người dùng của token hiện tại | – |
+| POST | `/tickets` | Tạo phiếu bảo hành (Chờ phân công), chỉ quản lý | – |
 | GET | `/tickets` | Danh sách phiếu; lọc `status`; quản lý thấy tất cả, kỹ thuật viên và khách chỉ thấy phiếu của mình | US4, US5 |
 | GET | `/tickets/{ticket_code}` | Chi tiết phiếu kèm lịch sử phân công | US4, US5 |
+| PATCH | `/tickets/{ticket_code}` | Sửa `device_model`, `required_skill`, `service_area` khi phiếu còn Chờ phân công | – |
+| DELETE | `/tickets/{ticket_code}` | Xóa phiếu còn Chờ phân công | – |
 | GET | `/tickets/{ticket_code}/technician-suggestions` | Gợi ý kỹ thuật viên phù hợp cho phiếu bảo hành | US1 |
 | POST | `/tickets/{ticket_code}/assignment` | Phân công kỹ thuật viên cho phiếu bảo hành | US2 |
 | POST | `/tickets/{ticket_code}/reassignment` | Phân công lại phiếu Đã phân công sang kỹ thuật viên khác, lý do bắt buộc (FR3) | US7 |
@@ -156,6 +159,10 @@ Không có người phù hợp: vẫn trả 200 với `"suggestions": []`.
 |---------|---------|
 | 401 | Thiếu hoặc hết hạn token |
 | 403 | Không phải role `MANAGER` (NFR3) |
+| 503 | PostgreSQL không kết nối được (`DATABASE_UNAVAILABLE`) |
+| 500 | Lỗi không lường trước (`INTERNAL_ERROR`, câu chung, không lộ chi tiết nội bộ) |
+
+Mã lỗi (`error.code`) do lớp nghiệp vụ ném ra; việc đổi sang mã HTTP nằm ở một nơi duy nhất là `src/middleware/error.js` (bảng `STATUS_BY_CODE`).
 
 ## 6. Truy vết endpoint ↔ User Story
 
@@ -235,3 +242,50 @@ Danh sách rỗng vẫn trả 200 với `"data": []`.
 | MANAGER | tất cả | tất cả | gợi ý, phân công, đặt lịch, xác nhận, hủy |
 | TECHNICIAN | phiếu mình phụ trách | lịch của mình | chỉ xem |
 | CUSTOMER | phiếu của mình (theo số điện thoại) | lịch của phiếu mình | xem, xác nhận |
+
+---
+
+## 8. Bổ sung Buổi 12 (CRUD phiếu bảo hành, kiểm tra sức khỏe)
+
+### POST `/tickets` – Create (chỉ `MANAGER`)
+Request: `{ "customer_phone": "0912345678", "device_model": "iPad Air", "required_skill": "SCREEN_REPAIR", "service_area": "Quận 7" }`
+
+**201** – như một phần tử của `GET /tickets`, `"status": "WAITING_ASSIGNMENT"`, `"technician": null`, mã mới `T-YYYY-NNNN` (số lớn nhất trong năm cộng 1).
+
+| Mã HTTP | Khi nào | `error.code` |
+|---------|---------|--------------|
+| 400 | Thiếu trường, `required_skill` ngoài 4 giá trị, số điện thoại không phải 9–15 chữ số, `device_model` quá 100 ký tự, `service_area` quá 50 ký tự | VALIDATION_ERROR |
+| 403 | Không phải `MANAGER` | FORBIDDEN |
+| 404 | Không có khách với số điện thoại đó | CUSTOMER_NOT_FOUND |
+
+| Trường | Bắt buộc | Kiểu | Độ dài | Dải giá trị |
+|--------|----------|------|--------|-------------|
+| `customer_phone` | Có | string | 9–15 | chỉ chữ số, khách phải đã có |
+| `device_model` | Có | string | 1–100 | – |
+| `required_skill` | Có | enum | – | `SCREEN_REPAIR`, `BATTERY`, `MAINBOARD`, `WATER_DAMAGE` |
+| `service_area` | Có | string | 1–50 | – |
+
+### PATCH `/tickets/{ticket_code}` – Update (chỉ `MANAGER`)
+Gửi một hoặc nhiều trong `device_model`, `required_skill`, `service_area`; trường không gửi giữ nguyên. Không đổi được khách hàng.
+
+| Mã HTTP | Khi nào | `error.code` |
+|---------|---------|--------------|
+| 200 | Thành công, trả phiếu sau khi sửa | – |
+| 400 | Body rỗng, giá trị sai, có `customer_phone`, `ticket_code` sai định dạng | VALIDATION_ERROR, INVALID_PARAMETER |
+| 404 | Không có phiếu | TICKET_NOT_FOUND |
+| 409 | Phiếu không còn Chờ phân công | TICKET_NOT_EDITABLE |
+
+### DELETE `/tickets/{ticket_code}` – Delete (chỉ `MANAGER`)
+**200**: `{ "ticket_code": "T-2026-0045", "deleted": true }`
+
+| Mã HTTP | Khi nào | `error.code` |
+|---------|---------|--------------|
+| 404 | Không có phiếu (kể cả gọi xóa lần hai) | TICKET_NOT_FOUND |
+| 409 | Phiếu không còn Chờ phân công | TICKET_NOT_DELETABLE |
+
+### GET `/health` (không cần đăng nhập, nằm ngoài `/api/v1`)
+- 200: `{ "status": "ok", "database": "up" }`
+- 503: `{ "status": "degraded", "database": "down" }` khi PostgreSQL không trả lời.
+
+### Phạm vi dữ liệu (cập nhật)
+Tạo, sửa, xóa phiếu: chỉ `MANAGER`. Kỹ thuật viên và khách nhận 403.
