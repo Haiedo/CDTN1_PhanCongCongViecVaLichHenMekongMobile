@@ -321,3 +321,82 @@ test('FR3 đồng thời: 2 yêu cầu cùng chuyển một phiếu sang một k
   assert.equal(results.find((r) => r.status === 409).body.error.code, 'SAME_TECHNICIAN');
   assert.equal(await holder('T-2026-0502'), 'TECH-009');
 });
+
+// ===== BT2: CRUD phiếu bảo hành (thực thể thứ hai), seed chạy lại, suy giảm có kiểm soát =====
+const NEW_TICKET = { customer_phone: '0912345678', device_model: 'iPad Air', required_skill: 'SCREEN_REPAIR', service_area: 'Quận 7' };
+
+test('CRUD phiếu – Create/Read: tạo → 201, mã T-YYYY-NNNN kế tiếp, Chờ phân công, đọc lại được', async () => {
+  const r = await call('POST', '/tickets', { body: NEW_TICKET });
+  assert.equal(r.status, 201);
+  assert.match(r.body.ticket_code, /^T-\d{4}-\d{4}$/);
+  assert.equal(r.body.status, 'WAITING_ASSIGNMENT');
+  assert.equal(r.body.technician, null);
+  assert.equal(r.body.customer.full_name, 'Phạm Quốc Dũng');
+  const n = (c) => Number(c.slice(7));
+  assert.ok(n(r.body.ticket_code) > 44, 'mã mới phải lớn hơn mã mẫu lớn nhất (T-2026-0044), không trùng');
+  const again = await call('POST', '/tickets', { body: NEW_TICKET });
+  assert.equal(n(again.body.ticket_code), n(r.body.ticket_code) + 1);
+  const got = await call('GET', `/tickets/${r.body.ticket_code}`);
+  assert.equal(got.status, 200); assert.equal(got.body.device_model, 'iPad Air');
+});
+test('CRUD phiếu – dữ liệu sai: thiếu trường → 400; khách không tồn tại → 404; không phải quản lý → 403', async () => {
+  const bad = await call('POST', '/tickets', { body: { device_model: 'iPad' } });
+  assert.equal(bad.status, 400); assert.equal(bad.body.error.code, 'VALIDATION_ERROR');
+  assert.ok(bad.body.error.details.length >= 3);
+  const noCust = await call('POST', '/tickets', { body: { ...NEW_TICKET, customer_phone: '0999999999' } });
+  assert.equal(noCust.status, 404); assert.equal(noCust.body.error.code, 'CUSTOMER_NOT_FOUND');
+  const cust = { 'x-user': 'khach01', 'x-role': 'CUSTOMER', 'x-user-code': '0901234567' };
+  assert.equal((await call('POST', '/tickets', { headers: cust, body: NEW_TICKET })).status, 403);
+  assert.equal((await call('DELETE', '/tickets/T-2026-0043', { headers: cust })).status, 403);
+});
+test('CRUD phiếu – Update: sửa khi Chờ phân công → 200; đã phân công → 409; không gửi gì → 400; không có → 404', async () => {
+  const t = (await call('POST', '/tickets', { body: NEW_TICKET })).body.ticket_code;
+  const up = await call('PATCH', `/tickets/${t}`, { body: { service_area: 'Quận 1', device_model: 'iPad Pro' } });
+  assert.equal(up.status, 200); assert.equal(up.body.service_area, 'Quận 1'); assert.equal(up.body.device_model, 'iPad Pro');
+  assert.equal(up.body.required_skill, 'SCREEN_REPAIR');                       // trường không gửi giữ nguyên
+  assert.equal((await call('PATCH', `/tickets/${t}`, { body: {} })).status, 400);
+  assert.equal((await call('PATCH', '/tickets/T-2026-9999', { body: { service_area: 'Quận 1' } })).status, 404);
+  const assigned = await call('PATCH', '/tickets/T-2026-0044', { body: { service_area: 'Quận 1' } });   // phiếu mẫu đã phân công
+  assert.equal(assigned.status, 409); assert.equal(assigned.body.error.code, 'TICKET_NOT_EDITABLE');
+});
+test('CRUD phiếu – Delete: xóa khi Chờ phân công → 200 rồi 404; phiếu đã phân công → 409 và còn nguyên', async () => {
+  const t = (await call('POST', '/tickets', { body: NEW_TICKET })).body.ticket_code;
+  const del = await call('DELETE', `/tickets/${t}`);
+  assert.equal(del.status, 200); assert.equal(del.body.deleted, true);
+  assert.equal((await call('GET', `/tickets/${t}`)).status, 404);
+  assert.equal((await call('DELETE', `/tickets/${t}`)).status, 404);
+  const no = await call('DELETE', '/tickets/T-2026-0044');
+  assert.equal(no.status, 409); assert.equal(no.body.error.code, 'TICKET_NOT_DELETABLE');
+  assert.equal((await call('GET', '/tickets/T-2026-0044')).status, 200);
+  assert.equal((await call('DELETE', '/tickets/abc')).status, 400);
+});
+test('NFR2: 8 yêu cầu tạo phiếu cùng lúc đều thành công và nhận 8 mã khác nhau (không trùng mã)', async () => {
+  const results = await Promise.all(Array.from({ length: 8 }, () => call('POST', '/tickets', { body: NEW_TICKET })));
+  assert.ok(results.every((r) => r.status === 201));
+  assert.equal(new Set(results.map((r) => r.body.ticket_code)).size, 8);
+});
+test('C5 – chạy lại lần hai: migrate + seed lần nữa không lỗi, không nhân đôi dữ liệu mẫu', async () => {
+  const count = async () => (await pool.query(
+    `SELECT (SELECT COUNT(*) FROM customer)::int c, (SELECT COUNT(*) FROM technician WHERE technician_code IN ('TECH-003','TECH-005','TECH-007'))::int t,
+            (SELECT COUNT(*) FROM technician_skill s JOIN technician x ON x.technician_id = s.technician_id WHERE x.technician_code IN ('TECH-003','TECH-005','TECH-007'))::int s, (SELECT COUNT(*) FROM ticket WHERE ticket_code IN ('T-2026-0042','T-2026-0043','T-2026-0044'))::int k`)).rows[0];
+  const before = await count();
+  await migrate(TEST_URL, { seed: true });
+  await migrate(TEST_URL, { seed: true });
+  assert.deepEqual(await count(), before);
+  assert.deepEqual(before, { c: 2, t: 3, s: 4, k: 3 });
+});
+test('Suy giảm có kiểm soát: PostgreSQL mất kết nối → /health báo 503 "database: down"; API trả 503 DATABASE_UNAVAILABLE, không treo', async () => {
+  const ok = await fetch(base.replace('/api/v1', '') + '/health');
+  assert.deepEqual(await ok.json(), { status: 'ok', database: 'up' });
+  const original = pool.query; const err = console.error;
+  pool.query = async () => { throw Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:5432'), { code: 'ECONNREFUSED' }); };
+  console.error = () => {};
+  try {
+    const health = await fetch(base.replace('/api/v1', '') + '/health');
+    assert.equal(health.status, 503);
+    assert.deepEqual(await health.json(), { status: 'degraded', database: 'down' });
+    const r = await call('GET', '/tickets');
+    assert.equal(r.status, 503); assert.equal(r.body.error.code, 'DATABASE_UNAVAILABLE');
+  } finally { pool.query = original; console.error = err; }
+  assert.equal((await call('GET', '/tickets')).status, 200);                    // CSDL trở lại → hoạt động bình thường
+});
