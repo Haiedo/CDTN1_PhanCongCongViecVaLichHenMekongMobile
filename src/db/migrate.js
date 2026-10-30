@@ -36,7 +36,9 @@ async function migrate(databaseUrl, { seed = false } = {}) {
       console.log('Đã nạp dữ liệu mẫu (db/seed.sql)');
     }
   } finally {
-    try { await client.query('SELECT pg_advisory_unlock(727001)'); } catch (_) { /* bỏ qua */ }
+    // Nếu mở khóa thất bại (mất kết nối) thì khóa tư vấn tự nhả khi phiên kết thúc; chỉ cần ghi nhận.
+    try { await client.query('SELECT pg_advisory_unlock(727001)'); }
+    catch (e) { console.warn('Không mở được khóa migrate (tự nhả khi đóng kết nối):', e.message); }
     client.release();
     await pool.end();
   }
