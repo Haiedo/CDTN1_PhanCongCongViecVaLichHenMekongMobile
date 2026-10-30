@@ -1,4 +1,4 @@
-// LỚP API – TicketController: danh sách/chi tiết phiếu (US4, US5), gợi ý và phân công kỹ thuật viên (US1, US2).
+// LỚP API – TicketController: CRUD phiếu (tạo, xem, sửa, xóa), gợi ý và phân công kỹ thuật viên (US1, US2).
 // Chỉ làm 3 việc: kiểm tra đầu vào, gọi service, đổi kết quả thành HTTP. KHÔNG chứa quy tắc nghiệp vụ.
 const express = require('express');
 const { AppError } = require('../errors');
@@ -12,6 +12,10 @@ const { TICKET_RE, TECH_RE } = require('../services/validation');
 const router = express.Router();
 const wrap = (fn) => (req, res, next) => fn(req, res).catch(next);
 
+// Create – quản lý nhập phiếu mới (Chờ phân công)
+router.post('/', requireRole('MANAGER'), wrap(async (req, res) => {
+  res.status(201).json(await ticketService.create(req.body));
+}));
 router.get('/', wrap(async (req, res) => {
   res.status(200).json({ data: await ticketService.list({ status: req.query.status }, req.user) });
 }));
@@ -19,6 +23,15 @@ router.get('/:ticket_code', wrap(async (req, res) => {
   if (!TICKET_RE.test(req.params.ticket_code))
     throw new AppError(400, 'INVALID_PARAMETER', 'ticket_code sai định dạng.');
   res.status(200).json(await ticketService.get(req.params.ticket_code, req.user));
+}));
+// Update / Delete – chỉ khi phiếu còn Chờ phân công (service kiểm tra)
+router.patch('/:ticket_code', requireRole('MANAGER'), wrap(async (req, res) => {
+  if (!TICKET_RE.test(req.params.ticket_code)) throw new AppError(400, 'INVALID_PARAMETER', 'ticket_code sai định dạng.');
+  res.status(200).json(await ticketService.update(req.params.ticket_code, req.body));
+}));
+router.delete('/:ticket_code', requireRole('MANAGER'), wrap(async (req, res) => {
+  if (!TICKET_RE.test(req.params.ticket_code)) throw new AppError(400, 'INVALID_PARAMETER', 'ticket_code sai định dạng.');
+  res.status(200).json(await ticketService.remove(req.params.ticket_code));
 }));
 router.get('/:ticket_code/technician-suggestions', requireRole('MANAGER'), wrap(async (req, res) => {
   const { ticket_code: code } = req.params;

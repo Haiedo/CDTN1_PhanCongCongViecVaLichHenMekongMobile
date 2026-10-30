@@ -2,7 +2,7 @@
 // Token dạng  <payload>.<chữ ký>  (payload là JSON mã hóa base64url, chữ ký HMAC-SHA256) – không cần thư viện ngoài.
 // Hàm thuần: thời điểm hiện tại được truyền vào nên kiểm thử được mà không cần CSDL hay chờ 60 phút.
 const crypto = require('crypto');
-const { AppError } = require('../errors');
+const { DomainError } = require('../errors');
 
 const TTL_SECONDS = 60 * 60;
 
@@ -18,7 +18,7 @@ function sign(user, { secret, nowMs = Date.now(), ttlSeconds = TTL_SECONDS }) {
 }
 
 function verify(token, { secret, nowMs = Date.now() }) {
-  const bad = (code, msg) => new AppError(401, code, msg);
+  const bad = (code, msg) => new DomainError(code, msg);
   if (typeof token !== 'string' || token.split('.').length !== 2)
     throw bad('TOKEN_INVALID', 'Token không hợp lệ.');
   const [payload, sig] = token.split('.');

@@ -1,13 +1,13 @@
 // Unit test lớp nghiệp vụ (hàm thuần, KHÔNG cần CSDL): quy tắc BR-06 và bảng validation ở api-contract.md
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { validateAppointmentInput, toVnIso } = require('../src/services/validation');
+const { validateAppointmentInput, validateTicketInput, toVnIso } = require('../src/services/validation');
 
 const NOW = new Date('2026-10-05T01:00:00Z');               // 08:00 thứ Hai 05/10/2026 giờ VN
 const base = { ticket_code: 'T-2026-0042', technician_code: 'TECH-003', type: 'DROP_OFF',
                start_at: '2026-10-06T09:00:00+07:00', duration_minutes: 30 };
 const fails = (body, now = NOW) =>
-  assert.throws(() => validateAppointmentInput(body, now), (e) => e.status === 400 && e.code === 'VALIDATION_ERROR');
+  assert.throws(() => validateAppointmentInput(body, now), (e) => e.code === 'VALIDATION_ERROR');
 
 test('lịch hợp lệ: end_at = start_at + thời lượng, mặc định 30 phút', () => {
   const r = validateAppointmentInput({ ...base, duration_minutes: undefined }, NOW);
@@ -33,4 +33,26 @@ test('type sai, mã sai định dạng, thiếu start_at đều bị từ chối
 test('giờ UTC nhưng đúng khung giờ VN vẫn hợp lệ (đổi múi giờ đúng)', () => {
   const r = validateAppointmentInput({ ...base, start_at: '2026-10-06T02:00:00Z' }, NOW);   // 09:00 VN
   assert.equal(toVnIso(r.startAt), '2026-10-06T09:00:00+07:00');
+});
+
+// ----- Dữ liệu phiếu bảo hành (tạo / sửa) -----
+const ticketBody = { customer_phone: '0901234567', device_model: 'iPhone 15', required_skill: 'BATTERY', service_area: 'Quận 7' };
+const ticketFails = (body, opts) => assert.throws(() => validateTicketInput(body, opts), (e) => e.code === 'VALIDATION_ERROR');
+
+test('phiếu hợp lệ: cắt khoảng trắng thừa, trả về tên trường nội bộ', () => {
+  const r = validateTicketInput({ ...ticketBody, device_model: '  iPhone 15  ' });
+  assert.deepEqual(r, { customerPhone: '0901234567', deviceModel: 'iPhone 15', requiredSkill: 'BATTERY', serviceArea: 'Quận 7' });
+});
+test('tạo phiếu thiếu trường, sai tay nghề, số điện thoại không phải số, tên thiết bị quá 100 ký tự bị từ chối', () => {
+  ticketFails({});
+  ticketFails({ ...ticketBody, required_skill: 'COOKING' });
+  ticketFails({ ...ticketBody, customer_phone: '09ab' });
+  ticketFails({ ...ticketBody, device_model: 'x'.repeat(101) });
+  assert.doesNotThrow(() => validateTicketInput({ ...ticketBody, device_model: 'x'.repeat(100) }));   // biên: đúng 100 ký tự vẫn hợp lệ
+});
+test('sửa phiếu: chỉ cần một trường; không gửi gì hoặc đổi khách hàng bị từ chối', () => {
+  assert.equal(validateTicketInput({ service_area: 'Quận 1' }, { partial: true }).serviceArea, 'Quận 1');
+  ticketFails({}, { partial: true });
+  ticketFails({ customer_phone: '0912345678' }, { partial: true });
+  ticketFails({ required_skill: 'COOKING' }, { partial: true });
 });

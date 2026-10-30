@@ -28,4 +28,28 @@ async function findView(db, code) {
   const { rows } = await db.query(`${VIEW} WHERE tk.ticket_code = $1`, [code]);
   return rows[0] || null;
 }
-module.exports = { findByCode, assign, list, findView };
+
+// CRUD phiếu (US – tiếp nhận tối thiểu cho BT2). Mã nghiệp vụ T-YYYY-NNNN = số lớn nhất trong năm + 1,
+// sinh dưới khóa tư vấn để hai yêu cầu tạo cùng lúc không nhận cùng một mã.
+async function insert(db, { customerId, deviceModel, requiredSkill, serviceArea, year }) {
+  await db.query('SELECT pg_advisory_xact_lock(727002)');
+  const { rows: next } = await db.query(
+    `SELECT COALESCE(MAX(substring(ticket_code FROM 8)::int), 0) + 1 AS n FROM ticket WHERE ticket_code LIKE $1`,
+    [`T-${year}-%`]);
+  const code = `T-${year}-${String(next[0].n).padStart(4, '0')}`;
+  await db.query(
+    `INSERT INTO ticket (ticket_code, customer_id, device_model, required_skill, service_area)
+     VALUES ($1, $2, $3, $4, $5)`, [code, customerId, deviceModel, requiredSkill, serviceArea]);
+  return code;
+}
+// Chỉ ghi các trường được gửi; trường không gửi (undefined) giữ nguyên.
+async function update(db, ticketId, { deviceModel, requiredSkill, serviceArea }) {
+  await db.query(
+    `UPDATE ticket SET device_model = COALESCE($2, device_model), required_skill = COALESCE($3, required_skill),
+                       service_area = COALESCE($4, service_area) WHERE ticket_id = $1`,
+    [ticketId, deviceModel ?? null, requiredSkill ?? null, serviceArea ?? null]);
+}
+async function remove(db, ticketId) {
+  await db.query('DELETE FROM ticket WHERE ticket_id = $1', [ticketId]);
+}
+module.exports = { findByCode, assign, list, findView, insert, update, remove };
