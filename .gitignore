@@ -1,3 +1,9 @@
 node_modules/
 .env
 *.log
+*.zip
+Thumbs.db
+.DS_Store
+.vscode/
+coverage/
+giai-thich-ham.md

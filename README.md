@@ -15,7 +15,7 @@
 |------------|-----------|---------|
 | Node.js | **20 trở lên** (đã chạy trên 22) | `node -v` |
 | npm | 10 trở lên | `npm -v` |
-| PostgreSQL | **14 trở lên** (đã chạy trên 16) | cần extension `btree_gist` (bộ cài chuẩn đã kèm); cách cài: `docs/huong-dan-cai-dat-postgresql.md` |
+| PostgreSQL | **14 trở lên** (đã chạy trên 16) | cần extension `btree_gist` (bộ cài chuẩn đã kèm) |
 | `psql` | cùng bản PostgreSQL | phải nằm trong `PATH` |
 | Git | bất kỳ bản mới | để clone |
 | Trình duyệt | Chrome, Edge hoặc Firefox | dùng giao diện |
@@ -24,7 +24,7 @@ Không cần Docker, không cần cài thêm thư viện toàn cục.
 
 ## 2. Cài đặt và chạy (mỗi bước một lệnh)
 
-Làm lần lượt từng bước. Giảng viên và người chấm clone **đúng tag `v0.2`** vào một thư mục trống. Lệnh viết cho Bash; trên PowerShell chỉ khác bước 3.
+Làm lần lượt từng bước. Clone **đúng tag `v0.2`** vào một thư mục trống. Lệnh viết cho Bash; trên PowerShell chỉ khác bước 3.
 
 | Bước | Lệnh | Kết quả đúng |
 |------|------|--------------|
