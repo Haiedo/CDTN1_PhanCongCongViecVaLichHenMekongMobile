@@ -1,12 +1,14 @@
 // LỚP NGHIỆP VỤ – hàm thuần (không đụng CSDL) nên kiểm thử đơn vị được.
 // Quy tắc: SRS BR-06 và docs/api-contract.md (bảng validation).
-const { AppError } = require('../errors');
+const { DomainError } = require('../errors');
 const config = require('../config');
 
 const TICKET_RE = /^T-\d{4}-\d{4}$/;
 const TECH_RE = /^TECH-\d{3}$/;
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 const TYPES = ['DROP_OFF', 'PICK_UP'];
+const SKILLS = ['SCREEN_REPAIR', 'BATTERY', 'MAINBOARD', 'WATER_DAMAGE'];
+const PHONE_RE = /^\d{9,15}$/;
 
 // Đổi một thời điểm sang "giờ Việt Nam" để kiểm tra khung 08:00–17:30, thứ Hai–thứ Bảy
 function vnParts(date) {
@@ -44,8 +46,30 @@ function validateAppointmentInput(body = {}, now = new Date()) {
     }
   }
   if (errors.length) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'Dữ liệu không hợp lệ: ' + errors.join('; ') + '.', { details: errors });
+    throw new DomainError('VALIDATION_ERROR', 'Dữ liệu không hợp lệ: ' + errors.join('; ') + '.', { details: errors });
   }
   return { ticketCode, technicianCode, type, startAt, endAt, durationMinutes: duration };
 }
-module.exports = { validateAppointmentInput, toVnIso, TICKET_RE, TECH_RE };
+
+// Kiểm tra dữ liệu tạo / sửa phiếu bảo hành (hàm thuần).
+//   partial=false (tạo): bắt buộc đủ 4 trường.  partial=true (sửa): chỉ kiểm các trường có gửi, phải có ít nhất một trường.
+function validateTicketInput(body = {}, { partial = false } = {}) {
+  const errors = [];
+  const { customer_phone: phone, device_model: device, required_skill: skill, service_area: area } = body || {};
+  const has = (v) => v !== undefined;
+  if (!partial && !PHONE_RE.test(String(phone || ''))) errors.push('customer_phone bắt buộc, 9–15 chữ số');
+  if (!partial || has(device)) {
+    if (typeof device !== 'string' || device.trim().length < 1 || device.length > 100) errors.push('device_model bắt buộc, 1–100 ký tự');
+  }
+  if (!partial || has(skill)) { if (!SKILLS.includes(skill)) errors.push('required_skill chỉ nhận ' + SKILLS.join(', ')); }
+  if (!partial || has(area)) {
+    if (typeof area !== 'string' || area.trim().length < 1 || area.length > 50) errors.push('service_area bắt buộc, 1–50 ký tự');
+  }
+  if (partial && ![phone, device, skill, area].some(has)) errors.push('cần gửi ít nhất một trường cần sửa');
+  if (partial && has(phone)) errors.push('không đổi được khách hàng của phiếu (customer_phone)');
+  if (errors.length) {
+    throw new DomainError('VALIDATION_ERROR', 'Dữ liệu không hợp lệ: ' + errors.join('; ') + '.', { details: errors });
+  }
+  return { customerPhone: phone, deviceModel: device && device.trim(), requiredSkill: skill, serviceArea: area && area.trim() };
+}
+module.exports = { validateAppointmentInput, validateTicketInput, toVnIso, vnParts, TICKET_RE, TECH_RE, SKILLS };

@@ -1,7 +1,7 @@
 // LỚP NGHIỆP VỤ – AuthService: đăng nhập tài khoản DEMO của Sprint 2 (không có bảng người dùng trong ERD L4).
 // Tài khoản giả lập dùng chung mật khẩu demo; bản thật sẽ thay bằng dịch vụ đăng nhập của hệ thống chính.
 const crypto = require('crypto');
-const { AppError } = require('../errors');
+const { DomainError } = require('../errors');
 const config = require('../config');
 const { sign, TTL_SECONDS } = require('./token');
 
@@ -20,7 +20,7 @@ const same = (a, b) => {
 function login(username, password, nowMs = Date.now()) {
   const u = DEMO_USERS.find((d) => d.name === username);
   if (!u || !same(password || '', config.demoPassword))
-    throw new AppError(401, 'INVALID_CREDENTIALS', 'Sai tên đăng nhập hoặc mật khẩu.');
+    throw new DomainError('INVALID_CREDENTIALS', 'Sai tên đăng nhập hoặc mật khẩu.');
   return { token: sign(u, { secret: config.jwtSecret, nowMs }), token_type: 'Bearer', expires_in: TTL_SECONDS,
            user: { name: u.name, full_name: u.full_name, role: u.role, code: u.code } };
 }

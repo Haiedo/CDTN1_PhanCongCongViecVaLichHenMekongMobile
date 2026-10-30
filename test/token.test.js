@@ -19,7 +19,7 @@ test('biên: còn 1 giây trước 60 phút vẫn hợp lệ', () => {
 test('biên: đúng 60 phút là hết hạn (TOKEN_EXPIRED)', () => {
   const t = sign(USER, { secret: SECRET, nowMs: T0 });
   assert.throws(() => verify(t, { secret: SECRET, nowMs: T0 + TTL_SECONDS * 1000 }),
-    (e) => e.status === 401 && e.code === 'TOKEN_EXPIRED');
+    (e) => e.code === 'TOKEN_EXPIRED');
 });
 test('dữ liệu sai: token bị sửa nội dung (đổi vai trò thành MANAGER) bị từ chối', () => {
   const t = sign({ name: 'khach01', role: 'CUSTOMER', code: '0901234567' }, { secret: SECRET, nowMs: T0 });
@@ -30,7 +30,7 @@ test('dữ liệu sai: token bị sửa nội dung (đổi vai trò thành MANAG
 test('dữ liệu sai: ký bằng khóa khác, chuỗi rác, rỗng, không phải chuỗi đều bị từ chối', () => {
   const other = sign(USER, { secret: 'khoa-khac', nowMs: T0 });
   for (const bad of [other, 'abc', 'a.b.c', '', null, undefined, 123])
-    assert.throws(() => verify(bad, { secret: SECRET, nowMs: T0 }), (e) => e.status === 401 && e.code === 'TOKEN_INVALID');
+    assert.throws(() => verify(bad, { secret: SECRET, nowMs: T0 }), (e) => e.code === 'TOKEN_INVALID');
 });
 test('dữ liệu sai: ký token mà thiếu khóa bí mật thì báo lỗi, không tạo token yếu', () => {
   assert.throws(() => sign(USER, { secret: '', nowMs: T0 }), /JWT_SECRET/);
