@@ -19,6 +19,14 @@ test('trước 08:00 hoặc kết thúc sau 17:30 bị từ chối (BR-06)', () 
   fails({ ...base, start_at: '2026-10-06T07:30:00+07:00' });
   fails({ ...base, start_at: '2026-10-06T17:15:00+07:00', duration_minutes: 30 });
 });
+test('ngày không có thật bị từ chối, không tự đổi sang ngày khác (BUG-08)', () => {
+  fails({ ...base, start_at: '2027-02-30T09:00:00+07:00' });
+  fails({ ...base, start_at: '2027-04-31T09:00:00+07:00' });
+  fails({ ...base, start_at: '2027-02-29T09:00:00+07:00' });          // 2027 không phải năm nhuận
+  fails({ ...base, start_at: '2026-10-06T24:00:00+07:00' });
+  const leap = validateAppointmentInput({ ...base, start_at: '2028-02-29T09:00:00+07:00' }, NOW);   // 2028 nhuận, thứ Ba
+  assert.equal(toVnIso(leap.startAt), '2028-02-29T09:00:00+07:00');
+});
 test('Chủ nhật bị từ chối', () => fails({ ...base, start_at: '2026-10-11T09:00:00+07:00' }));
 test('thời lượng ngoài 15–120 hoặc không phải số nguyên bị từ chối', () => {
   fails({ ...base, duration_minutes: 10 });
