@@ -289,3 +289,7 @@ Gửi một hoặc nhiều trong `device_model`, `required_skill`, `service_area
 
 ### Phạm vi dữ liệu (cập nhật)
 Tạo, sửa, xóa phiếu: chỉ `MANAGER`. Kỹ thuật viên và khách nhận 403.
+
+### GET `/appointments` – tham số lọc (cập nhật theo BUG-09)
+`technician_code` (dạng `TECH-003`), `ticket_code` (dạng `T-2026-0042`), `status` (`PENDING_CONFIRMATION`, `CONFIRMED`, `CANCELLED`) đều tùy chọn. Giá trị sai định dạng trả 400 `INVALID_PARAMETER`, cùng quy ước với `GET /tickets`; không trả 200 với danh sách rỗng như trước.
+`GET`, `PATCH`, `DELETE /appointments/{appointment_code}` với mã sai định dạng (không phải `APT-` và ít nhất 4 chữ số) cũng trả 400 `INVALID_PARAMETER`; mã đúng định dạng nhưng không tồn tại vẫn trả 404 `APPOINTMENT_NOT_FOUND`.

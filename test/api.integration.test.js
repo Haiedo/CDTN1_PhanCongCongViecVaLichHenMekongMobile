@@ -174,6 +174,18 @@ test('Update/Delete: xác nhận → CONFIRMED; xác nhận lại → 409; hủy
   assert.equal((await call('GET', '/appointments/APT-9999')).status, 404);
 });
 
+test('lịch hẹn: tham số lọc và mã sai định dạng → 400 INVALID_PARAMETER, không trả 200 rỗng (BUG-09)', async () => {
+  for (const q of ['status=BOGUS', 'technician_code=BAD', 'ticket_code=42']) {
+    const r = await call('GET', `/appointments?${q}`);
+    assert.equal(r.status, 400, q); assert.equal(r.body.error.code, 'INVALID_PARAMETER', q);
+  }
+  assert.equal((await call('GET', '/appointments/abc')).status, 400);
+  assert.equal((await call('PATCH', '/appointments/abc', { body: { status: 'CONFIRMED' } })).status, 400);
+  assert.equal((await call('DELETE', '/appointments/abc')).status, 400);
+  const ok = await call('GET', '/appointments?status=CONFIRMED&technician_code=TECH-003&ticket_code=T-2026-0044');
+  assert.equal(ok.status, 200); assert.deepEqual(ok.body.data, []);   // bộ lọc đúng định dạng nhưng chưa có lịch → 200 rỗng
+});
+
 // ===== Sprint 2: đăng nhập bằng token, danh sách phiếu, khách xem lịch (giao diện gọi các API này) =====
 const login = (username, password) => call('POST', '/auth/login', { headers: {}, body: { username, password } });
 const bearer = (token) => ({ authorization: `Bearer ${token}` });
