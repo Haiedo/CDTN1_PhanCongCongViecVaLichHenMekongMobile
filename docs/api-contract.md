@@ -260,7 +260,7 @@ Request: `{ "customer_phone": "0912345678", "device_model": "iPad Air", "require
 
 | Trường | Bắt buộc | Kiểu | Độ dài | Dải giá trị |
 |--------|----------|------|--------|-------------|
-| `customer_phone` | Có | string | 9–15 | chỉ chữ số, khách phải đã có |
+| `customer_phone` | Có | string | 9–15 | chỉ chữ số, phải gửi dạng chuỗi (số JSON như `901234567` bị 400), khách phải đã có |
 | `device_model` | Có | string | 1–100 | – |
 | `required_skill` | Có | enum | – | `SCREEN_REPAIR`, `BATTERY`, `MAINBOARD`, `WATER_DAMAGE` |
 | `service_area` | Có | string | 1–50 | – |

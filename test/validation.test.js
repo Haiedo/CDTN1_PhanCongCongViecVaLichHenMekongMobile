@@ -55,6 +55,7 @@ test('tạo phiếu thiếu trường, sai tay nghề, số điện thoại khô
   ticketFails({});
   ticketFails({ ...ticketBody, required_skill: 'COOKING' });
   ticketFails({ ...ticketBody, customer_phone: '09ab' });
+  ticketFails({ ...ticketBody, customer_phone: 901234567 });          // số thay vì chuỗi: phải 400, không được thành 404 (BUG-10)
   ticketFails({ ...ticketBody, device_model: 'x'.repeat(101) });
   assert.doesNotThrow(() => validateTicketInput({ ...ticketBody, device_model: 'x'.repeat(100) }));   // biên: đúng 100 ký tự vẫn hợp lệ
 });

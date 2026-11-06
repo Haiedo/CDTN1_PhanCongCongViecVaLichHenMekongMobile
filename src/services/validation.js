@@ -68,7 +68,7 @@ function validateTicketInput(body = {}, { partial = false } = {}) {
   const errors = [];
   const { customer_phone: phone, device_model: device, required_skill: skill, service_area: area } = body || {};
   const has = (v) => v !== undefined;
-  if (!partial && !PHONE_RE.test(String(phone || ''))) errors.push('customer_phone bắt buộc, 9–15 chữ số');
+  if (!partial && !(typeof phone === 'string' && PHONE_RE.test(phone))) errors.push('customer_phone bắt buộc, kiểu chuỗi gồm 9–15 chữ số');
   if (!partial || has(device)) {
     if (typeof device !== 'string' || device.trim().length < 1 || device.length > 100) errors.push('device_model bắt buộc, 1–100 ký tự');
   }
