@@ -9,6 +9,7 @@
     "start": "node src/server.js",
     "e2e": "node scripts/e2e.js",
     "demo:reset": "node scripts/reset-demo.js",
+    "tc": "node scripts/test-cases.js",
     "test": "node --test --test-concurrency=1 test/validation.test.js test/token.test.js test/client.test.js test/config.test.js test/errors.test.js test/architecture.test.js test/api.integration.test.js"
   },
   "engines": { "node": ">=20" },

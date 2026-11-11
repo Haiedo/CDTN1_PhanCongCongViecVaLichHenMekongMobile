@@ -260,7 +260,7 @@ Request: `{ "customer_phone": "0912345678", "device_model": "iPad Air", "require
 
 | Trường | Bắt buộc | Kiểu | Độ dài | Dải giá trị |
 |--------|----------|------|--------|-------------|
-| `customer_phone` | Có | string | 9–15 | chỉ chữ số, khách phải đã có |
+| `customer_phone` | Có | string | 9–15 | chỉ chữ số, phải gửi dạng chuỗi (số JSON như `901234567` bị 400), khách phải đã có |
 | `device_model` | Có | string | 1–100 | – |
 | `required_skill` | Có | enum | – | `SCREEN_REPAIR`, `BATTERY`, `MAINBOARD`, `WATER_DAMAGE` |
 | `service_area` | Có | string | 1–50 | – |
@@ -289,3 +289,7 @@ Gửi một hoặc nhiều trong `device_model`, `required_skill`, `service_area
 
 ### Phạm vi dữ liệu (cập nhật)
 Tạo, sửa, xóa phiếu: chỉ `MANAGER`. Kỹ thuật viên và khách nhận 403.
+
+### GET `/appointments` – tham số lọc (cập nhật theo BUG-09)
+`technician_code` (dạng `TECH-003`), `ticket_code` (dạng `T-2026-0042`), `status` (`PENDING_CONFIRMATION`, `CONFIRMED`, `CANCELLED`) đều tùy chọn. Giá trị sai định dạng trả 400 `INVALID_PARAMETER`, cùng quy ước với `GET /tickets`; không trả 200 với danh sách rỗng như trước.
+`GET`, `PATCH`, `DELETE /appointments/{appointment_code}` với mã sai định dạng (không phải `APT-` và ít nhất 4 chữ số) cũng trả 400 `INVALID_PARAMETER`; mã đúng định dạng nhưng không tồn tại vẫn trả 404 `APPOINTMENT_NOT_FOUND`.

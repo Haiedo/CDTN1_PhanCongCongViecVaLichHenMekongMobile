@@ -10,6 +10,17 @@ const TYPES = ['DROP_OFF', 'PICK_UP'];
 const SKILLS = ['SCREEN_REPAIR', 'BATTERY', 'MAINBOARD', 'WATER_DAMAGE'];
 const PHONE_RE = /^\d{9,15}$/;
 
+// ISO_RE chỉ kiểm hình dạng chuỗi. Date.parse của Node lại "làm tròn" ngày không có thật (30/02 → 02/03),
+// nên phải tự kiểm ngày–giờ có thật trước khi tin vào Date.parse (BUG-08).
+function isRealDateTime(raw) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/.exec(raw);
+  if (!m) return false;
+  const [y, mo, d, h, mi, s] = [m[1], m[2], m[3], m[4], m[5], m[6] || '0'].map(Number);
+  const probe = new Date(Date.UTC(y, mo - 1, d));
+  return probe.getUTCFullYear() === y && probe.getUTCMonth() === mo - 1 && probe.getUTCDate() === d
+    && h <= 23 && mi <= 59 && s <= 59;
+}
+
 // Đổi một thời điểm sang "giờ Việt Nam" để kiểm tra khung 08:00–17:30, thứ Hai–thứ Bảy
 function vnParts(date) {
   const d = new Date(date.getTime() + config.vnOffsetMinutes * 60000);
@@ -32,7 +43,7 @@ function validateAppointmentInput(body = {}, now = new Date()) {
     errors.push('duration_minutes phải là số nguyên từ 15 đến 120');
 
   let startAt = null; let endAt = null;
-  if (typeof startRaw !== 'string' || !ISO_RE.test(startRaw) || Number.isNaN(Date.parse(startRaw))) {
+  if (typeof startRaw !== 'string' || !ISO_RE.test(startRaw) || !isRealDateTime(startRaw) || Number.isNaN(Date.parse(startRaw))) {
     errors.push('start_at bắt buộc, định dạng ISO 8601 kèm múi giờ');
   } else {
     startAt = new Date(startRaw);
@@ -57,7 +68,7 @@ function validateTicketInput(body = {}, { partial = false } = {}) {
   const errors = [];
   const { customer_phone: phone, device_model: device, required_skill: skill, service_area: area } = body || {};
   const has = (v) => v !== undefined;
-  if (!partial && !PHONE_RE.test(String(phone || ''))) errors.push('customer_phone bắt buộc, 9–15 chữ số');
+  if (!partial && !(typeof phone === 'string' && PHONE_RE.test(phone))) errors.push('customer_phone bắt buộc, kiểu chuỗi gồm 9–15 chữ số');
   if (!partial || has(device)) {
     if (typeof device !== 'string' || device.trim().length < 1 || device.length > 100) errors.push('device_model bắt buộc, 1–100 ký tự');
   }
