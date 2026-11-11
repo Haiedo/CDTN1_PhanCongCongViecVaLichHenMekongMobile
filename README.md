@@ -37,11 +37,12 @@ Làm lần lượt từng bước. Clone **đúng tag `v0.2`** vào một thư m
 | 7 | `psql -U postgres -h localhost -c "CREATE DATABASE mekong_l4_test;"` | `CREATE DATABASE` (CSDL riêng cho test, bị xóa sạch mỗi lần test) |
 | 8 | `npm run migrate` | `Đã áp dụng 001_schema (db/schema.sql)` |
 | 9 | `npm run seed` | `Đã nạp dữ liệu mẫu (db/seed.sql)` |
-| 10 | `npm test` | cuối kết quả có `tests 69`, `pass 69`, `fail 0` (đầu dòng là `ℹ` hoặc `#` tùy phiên bản Node) |
+| 10 | `npm test` | cuối kết quả có `tests 71`, `pass 71`, `fail 0` (đầu dòng là `ℹ` hoặc `#` tùy phiên bản Node) |
 | 11 | `npm run e2e` | `KẾT QUẢ END-TO-END: 12/12 bước đạt, 0 lỗi` |
-| 12 | `npm start` | `API chạy tại http://localhost:3000`; mở địa chỉ đó trong trình duyệt để vào giao diện |
+| 12 | `npm run tc` | cuối kết quả có `Tổng: 12 test case · PASS 12 · FAIL 0` (12 test case của Test Report; chạy riêng một ca: `npm run tc -- TC-05`) |
+| 13 | `npm start` | `API chạy tại http://localhost:3000`; mở địa chỉ đó trong trình duyệt để vào giao diện |
 
-Thứ tự bước 10 → 12 không bắt buộc; `npm test` và `npm run e2e` dùng `mekong_l4_test`, không đụng dữ liệu của `mekong_l4`. Khi `npm start` đang chạy ở một cửa sổ, chạy test ở cửa sổ khác.
+Thứ tự bước 10 → 13 không bắt buộc; `npm test`, `npm run e2e` và `npm run tc` dùng `mekong_l4_test`, không đụng dữ liệu của `mekong_l4`. Khi `npm start` đang chạy ở một cửa sổ, chạy test ở cửa sổ khác.
 
 **Tài khoản demo** (mật khẩu chung `demo123`, là dữ liệu giả lập công khai, không phải khóa bí mật): `quanly01` (quản lý), `ktv.an` (kỹ thuật viên TECH-003), `ktv.bich` (kỹ thuật viên TECH-007), `khach01` (khách Lê Minh Châu). Token đăng nhập có hiệu lực 60 phút.
 
@@ -175,13 +176,14 @@ Giải thích từng hàm: [`docs/giai-thich-ham.md`](docs/giai-thich-ham.md).
 
 ## 6. Kiểm thử
 
-Một lệnh: `npm test` (69 test, cần `TEST_DATABASE_URL` cho nhóm tích hợp). Có thể chạy từng nhóm: `node --test test/validation.test.js`.
+Một lệnh: `npm test` (71 test, cần `TEST_DATABASE_URL` cho nhóm tích hợp). Có thể chạy từng nhóm: `node --test test/validation.test.js`.
 
 | Loại | Tệp | Số test | Cần CSDL |
 |------|-----|---------|----------|
-| Đơn vị | `validation.test.js`, `token.test.js`, `client.test.js`, `config.test.js`, `errors.test.js` | 33 | không |
+| Đơn vị | `validation.test.js`, `token.test.js`, `client.test.js`, `config.test.js`, `errors.test.js` | 34 | không |
 | Kiến trúc (đọc mã nguồn, kiểm tách lớp) | `architecture.test.js` | 5 | không |
-| Tích hợp trên PostgreSQL thật | `api.integration.test.js` | 31 | có |
+| Tích hợp trên PostgreSQL thật | `api.integration.test.js` | 32 | có |
+| 12 test case của Test Report, chạy thật qua HTTP | `scripts/test-cases.js` (`npm run tc`) | 12 | có (`TEST_DATABASE_URL`) |
 
 Mỗi nhóm có đủ ba loại tình huống: **luồng đúng** (phân công, đặt lịch, tạo phiếu thành công), **giá trị biên** (lịch liền kề 09:30 hợp lệ nhưng chồng 1 phút bị từ chối; token hết hạn đúng giây `exp`; `device_model` đúng 100 ký tự; đúng 8 yêu cầu đồng thời) và **dữ liệu sai** (thiếu trường, sai định dạng, mã không tồn tại, JSON hỏng, token sửa nội dung). Chạy lại lần hai: test kiểm tra `migrate` và `seed` hai lần không nhân đôi dữ liệu. Suy giảm có kiểm soát: test mô phỏng mất kết nối PostgreSQL và kiểm `503`.
 

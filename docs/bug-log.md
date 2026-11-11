@@ -11,6 +11,9 @@ Mỗi lỗi đủ 7 dòng theo bốn bước gỡ lỗi: **tái lập → khoanh
 | BUG-05 | Dải đỏ "báo lỗi" hiện ở trang chi tiết mọi phiếu đã phân công | Giao diện |
 | BUG-06 | Giao diện "không làm được gì" khi các phiếu mẫu đã được phân công hết | Giao diện + nghiệp vụ |
 | BUG-07 | Bố cục web bị vỡ (bảng tràn khỏi khung, biểu mẫu lệch) | Giao diện (CSS) |
+| BUG-08 | Ngày không tồn tại (30/02) được nhận và tự đổi sang ngày khác | Nghiệp vụ (validation) |
+| BUG-09 | Lọc lịch hẹn bằng giá trị sai trả 200 rỗng; mã sai định dạng trả 404 | API |
+| BUG-10 | `customer_phone` kiểu số bị báo 404 thay vì 400 | Nghiệp vụ (validation) |
 
 ## BUG-01 – Deadlock khi 4 yêu cầu đặt lịch chồng nhau gửi cùng lúc
 
@@ -81,3 +84,39 @@ Mỗi lỗi đủ 7 dòng theo bốn bước gỡ lỗi: **tái lập → khoanh
 5. **Cách sửa:** Mở rộng vùng chứa, cho ô bảng tự xuống dòng, nhóm nút bằng `.actions { flex-wrap }`, chia M2 thành hai cột bằng `.split` và dồn về một cột ở màn hình hẹp.
 6. **Xác nhận:** Chạy kiểm tra tự động độ tràn ngang trên các màn hình: không còn phần tử nào rộng quá khung; em mở lại giao diện và đối chiếu lại với wireframe.
 7. **Bài học và vị trí trong mã:** Kiểm tra giao diện sau mỗi lần thêm cột hoặc khối mới. Tệp: `src/frontend/styles.css`.
+
+---
+
+## Bug phát hiện ở Buổi 14 (bảy dòng: mã và mức độ · phát hiện bởi · triệu chứng · cách tái lập · nguyên nhân · cách sửa · commit và xác nhận)
+
+Tiêu chí phân loại: (1) người dùng còn làm được việc không; (2) dữ liệu có bị sai hoặc lộ không; (3) có cách làm tạm không. Chưa tìm thấy lỗi Critical (không lộ dữ liệu, không mất dữ liệu, không sập hệ thống).
+
+## BUG-08 – Ngày không tồn tại (30/02) được nhận và tự đổi sang ngày khác
+
+1. **Mã và mức độ:** BUG-08 · **Major** (dữ liệu sai nhưng API vẫn báo thành công; người dùng khó nhận ra nên không có cách làm tạm).
+2. **Phát hiện bởi:** TC-07 (dữ liệu sai), khi thử `start_at` ngày không có thật bằng `npm run tc -- TC-07`.
+3. **Triệu chứng:** `POST /appointments` với `start_at` = `<năm sau>-02-30T09:00:00+07:00` trả 201 và lưu lịch hẹn vào ngày 02/03; `-04-31` bị lưu thành 01/05. Khách và kỹ thuật viên nhìn thấy một ngày khác với ngày quản lý đã nhập.
+4. **Cách tái lập:** `npm run tc -- TC-07` ở bản trước khi sửa: 13-01 → 400, 02-30 → 201, 04-31 → 201, `appointment` 0 → 2. Hoặc dùng `curl` với `start_at` `2027-02-30T09:00:00+07:00` và đọc `start_at` trong phản hồi.
+5. **Nguyên nhân:** `validateAppointmentInput` chỉ kiểm hình dạng chuỗi bằng biểu thức chính quy rồi tin vào `Date.parse`. `Date.parse` của Node "làm tròn" ngày vượt tháng thay vì báo lỗi, nên 30/02 thành 02/03. Tháng 13 thì `Date.parse` trả `NaN` nên bị chặn, vì vậy lỗi chỉ lộ ra với ngày vượt số ngày của tháng.
+6. **Cách sửa:** thêm `isRealDateTime` trong `src/services/validation.js`: tách năm, tháng, ngày, giờ, phút, giây từ chuỗi, dựng `Date.UTC` rồi so lại từng thành phần (ngày, tháng, giờ ≤ 23, phút và giây ≤ 59). Chỉ sửa một hàm, không đổi API hay CSDL.
+7. **Commit và xác nhận:** [DÁN LINK COMMIT BUG-08]. Test hồi quy mới trong `test/validation.test.js` (30/02, 31/04, 29/02/2027, giờ 24, đối chứng 29/02/2028 hợp lệ); gỡ bản sửa thì test đỏ. `npm run tc -- TC-07` đạt PASS (cả 3 yêu cầu 400, `appointment` 0 → 0); `npm test` đạt 70/70 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-08-fixed.png`.
+
+## BUG-09 – Lọc lịch hẹn bằng giá trị sai trả 200 rỗng; mã sai định dạng trả 404
+
+1. **Mã và mức độ:** BUG-09 · **Minor** (không mất hay sai dữ liệu; gõ sai bộ lọc chỉ làm danh sách trông như "chưa có lịch", có cách làm tạm là gõ đúng).
+2. **Phát hiện bởi:** TC-09 (dữ liệu sai), so với `GET /tickets?status=BOGUS` vốn trả 400.
+3. **Triệu chứng:** `GET /appointments?status=BOGUS` và `?technician_code=BAD` trả 200 với `"data": []`; `GET /appointments/abc` trả 404 `APPOINTMENT_NOT_FOUND`. Cùng loại lỗi nhập ở `/tickets` thì trả 400 `INVALID_PARAMETER`, nên hai nhóm API trái quy ước.
+4. **Cách tái lập:** `npm run tc -- TC-09` ở bản trước khi sửa: `/tickets` 400; `/appointments?status=BOGUS` 200; `?technician_code=BAD` 200; `/appointments/abc` 404.
+5. **Nguyên nhân:** `appointment.routes.js` chuyển thẳng `req.query` và `req.params.code` xuống service mà không kiểm định dạng; truy vấn không khớp dòng nào nên trả danh sách rỗng hoặc "không tìm thấy". Các route của `/tickets` đã kiểm ở lớp API, route lịch hẹn bị bỏ sót.
+6. **Cách sửa:** trong `src/routes/appointment.routes.js` kiểm `status` thuộc ba trạng thái, `technician_code` theo `TECH-NNN`, `ticket_code` theo `T-YYYY-NNNN`, và mã lịch hẹn theo `APT-NNNN` (bằng `router.param`); sai thì trả 400 `INVALID_PARAMETER`. Mã đúng định dạng nhưng không tồn tại vẫn trả 404. Cập nhật `docs/api-contract.md`.
+7. **Commit và xác nhận:** [DÁN LINK COMMIT BUG-09]. Test tích hợp mới "lịch hẹn: tham số lọc và mã sai định dạng → 400" trong `test/api.integration.test.js`; gỡ bản sửa thì test đỏ. `npm run tc -- TC-09` đạt PASS (cả 4 yêu cầu 400); `npm test` đạt 71/71 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-09-fixed.png`.
+
+## BUG-10 – `customer_phone` kiểu số bị báo 404 thay vì 400
+
+1. **Mã và mức độ:** BUG-10 · **Minor** (không sai dữ liệu, không tạo phiếu hỏng; chỉ trả sai loại lỗi và thông báo gây hiểu nhầm, người dùng gửi lại chuỗi là được).
+2. **Phát hiện bởi:** TC-08 (dữ liệu sai), thử kiểu dữ liệu sai theo bảng validation trong `docs/api-contract.md` (`customer_phone` là string).
+3. **Triệu chứng:** `POST /tickets` với `"customer_phone": 901234567` (số JSON) trả 404 `CUSTOMER_NOT_FOUND` "Không tìm thấy khách hàng có số điện thoại 901234567", trong khi lẽ ra là 400 `VALIDATION_ERROR` vì sai kiểu.
+4. **Cách tái lập:** `npm run tc -- TC-08` ở bản trước khi sửa: `"09012345"` → 400; `901234567` → 404; `ticket` 3 → 3.
+5. **Nguyên nhân:** `validateTicketInput` kiểm `PHONE_RE.test(String(phone || ''))`; `String()` biến số thành chuỗi nên qua được kiểm tra định dạng, rồi lỗi mới lộ ở bước tìm khách hàng.
+6. **Cách sửa:** kiểm `typeof phone === 'string'` trước khi so định dạng, trong `src/services/validation.js`; ghi rõ "phải gửi dạng chuỗi" ở `docs/api-contract.md`.
+7. **Commit và xác nhận:** [DÁN LINK COMMIT BUG-10]. Thêm một dòng kiểm tra vào test "tạo phiếu thiếu trường, sai tay nghề…" trong `test/validation.test.js`; gỡ bản sửa thì test đỏ. `npm run tc -- TC-08` đạt PASS (cả 2 yêu cầu 400); `npm test` đạt 70/70 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-10-fixed.png`.
