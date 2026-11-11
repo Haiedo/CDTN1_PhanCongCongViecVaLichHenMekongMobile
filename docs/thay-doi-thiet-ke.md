@@ -123,6 +123,20 @@ Mỗi mục gồm 4 dòng: phản hồi, quyết định (SỬA hoặc GIỮ NGU
 
 ---
 
+## TD-20 – Bổ sung bộ 12 test case chạy thật (`npm run tc`)
+- **Phản hồi:** (tự đánh giá khi chuẩn bị Buổi 14) Test Report cần test case chạy thật, đủ năm loại, ghi được số dòng trước và sau, chụp ảnh và chạy lại được từng ca. 69 test có sẵn chỉ in "pass/fail", không in mã trạng thái, thông báo và số dòng nên không dùng làm minh chứng trực tiếp.
+- **Quyết định:** SỬA (bổ sung). Thêm `scripts/test-cases.js` và lệnh `npm run tc`: 12 test case, mỗi ca tự xóa dữ liệu và nạp lại seed, gọi API thật, in tiền điều kiện, bước, mong đợi, kết quả thực tế và PASS/FAIL; `npm run tc -- TC-05` chạy riêng một ca. Giữ nguyên 69 test cũ.
+- **Lý do:** Mỗi ca độc lập thứ tự chạy, kiểm chứng được và chạy lại tại lớp trong vài giây; dùng cùng CSDL kiểm thử như `npm run e2e` nên không đụng dữ liệu demo.
+- **Ảnh hưởng:** `scripts/test-cases.js`, `package.json` (thêm script `tc`), `docs/test-plan.md`, `docs/test-report.md`, `README.md` mục 3 và 6.
+
+## TD-21 – Sửa ba lỗi kiểm tra đầu vào tìm thấy khi chạy test case
+- **Phản hồi:** Bộ `npm run tc` ở bản `v0.2` cho 9 PASS, 3 FAIL (TC-07, TC-08, TC-09) → BUG-08, BUG-09, BUG-10 trong `docs/bug-log.md`.
+- **Quyết định:** SỬA cả ba, mỗi lỗi một commit riêng kèm test hồi quy. Không đổi API, CSDL hay kiến trúc: BUG-08 và BUG-10 sửa ở `validation.js`; BUG-09 sửa ở `appointment.routes.js` cho cùng quy ước với `/tickets`.
+- **Lý do:** BUG-08 làm lịch hẹn lưu sai ngày mà vẫn báo thành công (Major); hai lỗi còn lại làm hợp đồng API không nhất quán (Minor).
+- **Ảnh hưởng:** `src/services/validation.js`, `src/routes/appointment.routes.js`, `docs/api-contract.md` (kiểu của `customer_phone`, mục tham số lọc lịch hẹn), `test/validation.test.js`, `test/api.integration.test.js`; tổng số test 69 → 71.
+
+---
+
 ## Tổng hợp thay đổi so với BT1 (cho mục 7 của BT2)
 
 | Hạng mục | BT1 | Hiện tại (tag v0.2) | Mã |
