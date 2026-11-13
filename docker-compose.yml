@@ -1,0 +1,49 @@
+# Smart CRM – Mekong Mobile · L4. Two commands from an empty folder:
+#   cp .env.example .env
+#   docker compose up -d --build
+name: mekong-l4
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set - run "cp .env.example .env" first}
+      POSTGRES_DB: mekong_l4
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/docker-init:/docker-entrypoint-initdb.d:ro   # creates mekong_l4_test on first start
+    healthcheck:
+      # -h 127.0.0.1 forces a TCP check: during first-time initialisation PostgreSQL only listens on a
+      # Unix socket, and a socket check would report "healthy" before the app can actually connect.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d mekong_l4"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    # The database port is NOT published to the host: only the app container can reach it.
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/mekong_l4
+      TEST_DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/mekong_l4_test
+      PORT: "3000"
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is not set - run "cp .env.example .env" first}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-demo123}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    # "npm run seed" applies the schema once (re-runs are skipped) and loads the sample data (re-runs add nothing).
+    command: ["sh", "-c", "npm run seed && exec node src/server.js"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+volumes:
+  dbdata:

@@ -1,0 +1,6 @@
+# Keep Linux-executed files on LF line endings even when checked out on Windows
+# (a CRLF script inside a Linux container fails with "no such file or directory").
+*.sh        text eol=lf
+*.sql       text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf

@@ -16,6 +16,7 @@ app.get('/api', (_req, res) => res.json({
   note: 'Giao diện tại /app/. API dưới /api/v1: đăng nhập lấy Bearer token (hoặc header X-User, X-Role khi dùng curl)',
   endpoints: [
     'POST  /api/v1/auth/login',
+    'GET   /api/v1/auth/me',
     'POST  /api/v1/tickets',
     'GET   /api/v1/tickets',
     'GET   /api/v1/tickets/{ticket_code}',

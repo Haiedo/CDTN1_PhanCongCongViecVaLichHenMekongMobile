@@ -99,7 +99,7 @@ Tiêu chí phân loại: (1) người dùng còn làm được việc không; (2
 4. **Cách tái lập:** `npm run tc -- TC-07` ở bản trước khi sửa: 13-01 → 400, 02-30 → 201, 04-31 → 201, `appointment` 0 → 2. Hoặc dùng `curl` với `start_at` `2027-02-30T09:00:00+07:00` và đọc `start_at` trong phản hồi.
 5. **Nguyên nhân:** `validateAppointmentInput` chỉ kiểm hình dạng chuỗi bằng biểu thức chính quy rồi tin vào `Date.parse`. `Date.parse` của Node "làm tròn" ngày vượt tháng thay vì báo lỗi, nên 30/02 thành 02/03. Tháng 13 thì `Date.parse` trả `NaN` nên bị chặn, vì vậy lỗi chỉ lộ ra với ngày vượt số ngày của tháng.
 6. **Cách sửa:** thêm `isRealDateTime` trong `src/services/validation.js`: tách năm, tháng, ngày, giờ, phút, giây từ chuỗi, dựng `Date.UTC` rồi so lại từng thành phần (ngày, tháng, giờ ≤ 23, phút và giây ≤ 59). Chỉ sửa một hàm, không đổi API hay CSDL.
-7. **Commit và xác nhận:** [DÁN LINK COMMIT BUG-08]. Test hồi quy mới trong `test/validation.test.js` (30/02, 31/04, 29/02/2027, giờ 24, đối chứng 29/02/2028 hợp lệ); gỡ bản sửa thì test đỏ. `npm run tc -- TC-07` đạt PASS (cả 3 yêu cầu 400, `appointment` 0 → 0); `npm test` đạt 70/70 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-08-fixed.png`.
+7. **Commit và xác nhận:** https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile/commit/dfddba9f0a18197ee684a6fb816d68d31f59f42f. Test hồi quy mới trong `test/validation.test.js` (30/02, 31/04, 29/02/2027, giờ 24, đối chứng 29/02/2028 hợp lệ); gỡ bản sửa thì test đỏ. `npm run tc -- TC-07` đạt PASS (cả 3 yêu cầu 400, `appointment` 0 → 0); `npm test` đạt 70/70 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-08-fixed.png`.
 
 ## BUG-09 – Lọc lịch hẹn bằng giá trị sai trả 200 rỗng; mã sai định dạng trả 404
 
@@ -109,7 +109,7 @@ Tiêu chí phân loại: (1) người dùng còn làm được việc không; (2
 4. **Cách tái lập:** `npm run tc -- TC-09` ở bản trước khi sửa: `/tickets` 400; `/appointments?status=BOGUS` 200; `?technician_code=BAD` 200; `/appointments/abc` 404.
 5. **Nguyên nhân:** `appointment.routes.js` chuyển thẳng `req.query` và `req.params.code` xuống service mà không kiểm định dạng; truy vấn không khớp dòng nào nên trả danh sách rỗng hoặc "không tìm thấy". Các route của `/tickets` đã kiểm ở lớp API, route lịch hẹn bị bỏ sót.
 6. **Cách sửa:** trong `src/routes/appointment.routes.js` kiểm `status` thuộc ba trạng thái, `technician_code` theo `TECH-NNN`, `ticket_code` theo `T-YYYY-NNNN`, và mã lịch hẹn theo `APT-NNNN` (bằng `router.param`); sai thì trả 400 `INVALID_PARAMETER`. Mã đúng định dạng nhưng không tồn tại vẫn trả 404. Cập nhật `docs/api-contract.md`.
-7. **Commit và xác nhận:** [DÁN LINK COMMIT BUG-09]. Test tích hợp mới "lịch hẹn: tham số lọc và mã sai định dạng → 400" trong `test/api.integration.test.js`; gỡ bản sửa thì test đỏ. `npm run tc -- TC-09` đạt PASS (cả 4 yêu cầu 400); `npm test` đạt 71/71 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-09-fixed.png`.
+7. **Commit và xác nhận:** https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile/commit/6241abc6b1ec85a7a52cc03c4c97e3dae1be7e47. Test tích hợp mới "lịch hẹn: tham số lọc và mã sai định dạng → 400" trong `test/api.integration.test.js`; gỡ bản sửa thì test đỏ. `npm run tc -- TC-09` đạt PASS (cả 4 yêu cầu 400); `npm test` đạt 71/71 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-09-fixed.png`.
 
 ## BUG-10 – `customer_phone` kiểu số bị báo 404 thay vì 400
 
@@ -119,4 +119,16 @@ Tiêu chí phân loại: (1) người dùng còn làm được việc không; (2
 4. **Cách tái lập:** `npm run tc -- TC-08` ở bản trước khi sửa: `"09012345"` → 400; `901234567` → 404; `ticket` 3 → 3.
 5. **Nguyên nhân:** `validateTicketInput` kiểm `PHONE_RE.test(String(phone || ''))`; `String()` biến số thành chuỗi nên qua được kiểm tra định dạng, rồi lỗi mới lộ ở bước tìm khách hàng.
 6. **Cách sửa:** kiểm `typeof phone === 'string'` trước khi so định dạng, trong `src/services/validation.js`; ghi rõ "phải gửi dạng chuỗi" ở `docs/api-contract.md`.
-7. **Commit và xác nhận:** [DÁN LINK COMMIT BUG-10]. Thêm một dòng kiểm tra vào test "tạo phiếu thiếu trường, sai tay nghề…" trong `test/validation.test.js`; gỡ bản sửa thì test đỏ. `npm run tc -- TC-08` đạt PASS (cả 2 yêu cầu 400); `npm test` đạt 70/70 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-10-fixed.png`.
+7. **Commit và xác nhận:** https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile/commit/1161036ba5869718a092087a1fdf7e8460d40dba. Thêm một dòng kiểm tra vào test "tạo phiếu thiếu trường, sai tay nghề…" trong `test/validation.test.js`; gỡ bản sửa thì test đỏ. `npm run tc -- TC-08` đạt PASS (cả 2 yêu cầu 400); `npm test` đạt 70/70 ở thời điểm sửa. Ảnh: `docs/screenshots/BUG-10-fixed.png`.
+
+
+## Bug phát hiện ở Buổi 16
+
+## BUG-11 – Thư viện body-parser có lỗ hổng từ chối dịch vụ mức High
+1. **Mã và mức độ:** BUG-11 · **Major** (lỗ hổng mức High theo `npm audit`; ảnh hưởng tính sẵn sàng của mọi endpoint nhận JSON; không làm sai hay lộ dữ liệu, tạm thời xử lý được bằng cách khởi động lại dịch vụ).
+2. **Phát hiện bởi:** `npm audit --omit=dev` khi rà soát phụ thuộc cho mục 6 của checklist bảo mật (Buổi 16), không phải test chức năng.
+3. **Triệu chứng:** `npm audit` báo `1 high severity vulnerability`: `body-parser <1.20.9`, "Denial of Service via trailing bytes after a compressed request body" (GHSA-27r3-jxmh-p828). Khi dùng bình thường không có triệu chứng nào.
+4. **Cách tái lập:** `npm audit --omit=dev` cho `1 high severity vulnerability`; `npm ls body-parser` cho `body-parser@1.20.8` (phụ thuộc gián tiếp của `express@4.22.3`). Em không tái hiện cuộc tấn công, chỉ dựa vào thông báo của npm.
+5. **Nguyên nhân:** `package-lock.json` khóa `body-parser` ở 1.20.8, bản có lỗi; Express 4 đọc JSON qua thư viện này.
+6. **Cách sửa:** `npm audit fix`; chỉ nâng `body-parser` 1.20.8 → 1.20.9 trong `package-lock.json`, không đổi `package.json` hay mã nguồn. Commit này cũng đổi hai dòng version của package-lock.json (dòng 3 và 9) từ 0.2.0 lên 1.0.0 để khớp bản phát hành; package.json đổi version ở một commit riêng chore(release)
+7. **Commit và xác nhận:** https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile/commit/53a7ace1a30da02fa37884612a793bc3c9223e1d. Không có test hồi quy tự động cho lỗ hổng thư viện; xác nhận bằng `npm audit --omit=dev` → `found 0 vulnerabilities`, `npm test` 71/71, `npm run tc` 12/12. Ảnh: `docs/screenshots/BUG-11-fixed.png` (và ảnh trước khi sửa `BUG-11-audit-before.png`).
