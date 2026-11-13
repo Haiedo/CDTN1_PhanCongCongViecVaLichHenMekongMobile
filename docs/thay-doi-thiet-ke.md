@@ -150,3 +150,22 @@ Mỗi mục gồm 4 dòng: phản hồi, quyết định (SỬA hoặc GIỮ NGU
 | Cấu hình | Chưa quy định | Không có giá trị nhạy cảm trong mã | TD-18 |
 | CSDL ngừng | Chưa quy định | 503 rõ ràng, `/health` thật | TD-19 |
 | Kiến trúc 4 lớp, 6 bảng, wireframe M1–M3 | – | Giữ nguyên | TD-09, TD-14 |
+
+
+## TD-22 – Đóng gói bằng Docker Compose để dựng lại từ thư mục trống
+- **Phản hồi:** (đề Buổi 16, tiêu chí C1) Gói phải dựng lại được bằng không quá hai lệnh từ thư mục trống, theo đúng Deployment Guide. Cách cũ cần cài sẵn Node.js, PostgreSQL và tự tạo hai CSDL, nhiều bước dễ sai.
+- **Quyết định:** SỬA (bổ sung, không đổi mã nghiệp vụ). Thêm `Dockerfile` (Node 22, `npm ci`, chạy bằng người dùng `node`), `docker-compose.yml` (dịch vụ `db` PostgreSQL 16 và `app`, cả hai có healthcheck; `app` chờ `db` khỏe rồi chạy `npm run seed` và khởi động), `db/docker-init/001_create_test_db.sql` (tạo `mekong_l4_test`), `.dockerignore`, `.gitattributes`; viết lại `.env.example`. Giữ nguyên cách chạy không dùng Docker.
+- **Lý do:** hai lệnh `cp .env.example .env` và `docker compose up -d --build` thay cho 13 bước; cổng CSDL không mở ra máy chủ; `.env` không vào image; healthcheck của `db` kiểm bằng TCP (`-h 127.0.0.1`) để không báo "khỏe" sớm lúc PostgreSQL mới khởi tạo.
+- **Ảnh hưởng:** `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `.gitattributes`, `.env.example`, `db/docker-init/`, `README.md` (mục 0), `package.json` (phiên bản 1.0.0).
+
+## TD-23 – Tài liệu kỹ thuật và checklist bảo mật; kiểm tự động tài liệu API khớp mã
+- **Phản hồi:** (đề Buổi 16, tiêu chí C5, C6, C9) Cần Deployment Guide tiếng Anh năm mục, checklist bảo mật bảy mục có minh chứng, và API docs không được mô tả endpoint chưa có.
+- **Quyết định:** SỬA (bổ sung). Thêm `docs/deployment-guide.md`, `docs/checklist-bao-mat.md`, `docs/api-docs.md` (15 endpoint, ví dụ chép từ lần chạy thật) và lệnh `npm run check:docs` (`scripts/check-api-docs.js`) đếm route Express dưới `/api/v1` rồi so từng cặp phương thức và đường dẫn với các mục trong `docs/api-docs.md`. Thêm `GET /api/v1/auth/me` vào danh sách ở `GET /api` (trước đó thiếu).
+- **Lý do:** "đếm route trong mã = đếm endpoint trong tài liệu" thành một lệnh chạy lại được thay vì đếm tay; `docs/api-contract.md` giữ làm hồ sơ thiết kế tiếng Việt.
+- **Ảnh hưởng:** `docs/deployment-guide.md`, `docs/checklist-bao-mat.md`, `docs/api-docs.md`, `scripts/check-api-docs.js`, `package.json` (script `check:docs`), `src/app.js` (một dòng trong danh sách endpoint).
+
+## TD-24 – Nâng thư viện có lỗ hổng (BUG-11)
+- **Phản hồi:** Rà soát mục 6 của checklist bảo mật: `npm audit --omit=dev` báo 1 lỗ hổng mức High ở `body-parser` 1.20.8.
+- **Quyết định:** SỬA bằng `npm audit fix`; chỉ `package-lock.json` đổi (body-parser 1.20.9), không đổi `package.json` hay mã nguồn.
+- **Lý do:** bản vá cùng nhánh 1.20.x, không đổi API của Express 4.
+- **Ảnh hưởng:** `package-lock.json`; kết quả: `found 0 vulnerabilities`, `npm test` 71/71, `npm run tc` 12/12.

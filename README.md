@@ -2,14 +2,26 @@
 
 | | |
 |---|---|
-| Học phần | Chuyên đề tốt nghiệp 1 · Bài tập 2 (tag **v0.2**) |
+| Học phần | Chuyên đề tốt nghiệp 1 · Bài tập 3 (tag **v1.0**) |
 | Sinh viên | Nguyễn Trọng Hải · MSSV 2374802010126 · Lớp 261_71ITGR40203_03 |
 | Giảng viên hướng dẫn | ThS. Nguyễn Minh Tân |
 | Track · Luồng | **SE** · **L4** – phân công kỹ thuật viên cho phiếu bảo hành theo tay nghề, địa bàn, khối lượng công việc; đặt lịch hẹn giao – nhận máy và chặn trùng lịch |
-| Công nghệ | Node.js + Express (API), PostgreSQL (driver `pg`), giao diện web thuần HTML + ES modules (không có bước build) |
+| Công nghệ | Node.js + Express (API), PostgreSQL (driver `pg`), giao diện web thuần HTML + ES modules (không có bước build); đóng gói bằng Docker Compose |
 | Repo | https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile |
 
-## 1. Yêu cầu môi trường
+## 0. Chạy nhanh bằng Docker (hai lệnh, khuyến nghị)
+
+Chỉ cần Docker (có Compose v2) và Git; không cần cài Node.js hay PostgreSQL. Clone **đúng tag `v1.0`** vào một thư mục trống rồi chạy đúng hai lệnh:
+
+```bash
+git clone --branch v1.0 https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile.git .
+cp .env.example .env            # PowerShell: Copy-Item .env.example .env
+docker compose up -d --build    # lệnh thứ hai: dựng image, tạo CSDL, nạp dữ liệu mẫu, khởi động
+```
+
+Chờ khoảng 30 giây rồi `docker compose ps` (cả `db` và `app` phải `(healthy)`) và mở http://localhost:3000/ (đăng nhập `quanly01` / `demo123`). Kiểm tra toàn bộ: `docker compose exec app npm test` (cuối kết quả `tests 71`, `pass 71`, `fail 0`) và `docker compose exec app npm run tc` (`PASS 12 · FAIL 0`). Dừng: `docker compose down` (giữ dữ liệu) hoặc `docker compose down -v` (xóa dữ liệu). Hướng dẫn đầy đủ bằng tiếng Anh, gồm biến môi trường, dữ liệu mẫu và cách xử lý lỗi: [`docs/deployment-guide.md`](docs/deployment-guide.md).
+
+## 1. Yêu cầu môi trường (cách chạy không dùng Docker)
 
 | Thành phần | Phiên bản | Ghi chú |
 |------------|-----------|---------|
@@ -20,15 +32,15 @@
 | Git | bất kỳ bản mới | để clone |
 | Trình duyệt | Chrome, Edge hoặc Firefox | dùng giao diện |
 
-Không cần Docker, không cần cài thêm thư viện toàn cục.
+Cách này cần Node.js và PostgreSQL cài sẵn trên máy. Nếu chỉ muốn có Docker thì dùng mục 0.
 
-## 2. Cài đặt và chạy (mỗi bước một lệnh)
+## 2. Cài đặt và chạy không dùng Docker (mỗi bước một lệnh)
 
-Làm lần lượt từng bước. Clone **đúng tag `v0.2`** vào một thư mục trống. Lệnh viết cho Bash; trên PowerShell chỉ khác bước 3.
+Làm lần lượt từng bước. Clone **đúng tag `v1.0`** vào một thư mục trống. Lệnh viết cho Bash; trên PowerShell chỉ khác bước 3.
 
 | Bước | Lệnh | Kết quả đúng |
 |------|------|--------------|
-| 1 | `git clone --branch v0.2 https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile.git thu-nghiem` | có thư mục `thu-nghiem/` chứa `src/`, `db/`, `test/` |
+| 1 | `git clone --branch v1.0 https://github.com/Haiedo/CDTN1_PhanCongCongViecVaLichHenMekongMobile.git thu-nghiem` | có thư mục `thu-nghiem/` chứa `src/`, `db/`, `test/` |
 | 2 | `cd thu-nghiem` | đang ở thư mục dự án |
 | 3 | `npm install` | không báo lỗi, có `node_modules/` (cài đúng phiên bản theo `package-lock.json`) |
 | 4 | `cp .env.example .env` (PowerShell: `Copy-Item .env.example .env`) | có file `.env` |
@@ -185,9 +197,9 @@ Một lệnh: `npm test` (71 test, cần `TEST_DATABASE_URL` cho nhóm tích h�
 | Tích hợp trên PostgreSQL thật | `api.integration.test.js` | 32 | có |
 | 12 test case của Test Report, chạy thật qua HTTP | `scripts/test-cases.js` (`npm run tc`) | 12 | có (`TEST_DATABASE_URL`) |
 
-Mỗi nhóm có đủ ba loại tình huống: **luồng đúng** (phân công, đặt lịch, tạo phiếu thành công), **giá trị biên** (lịch liền kề 09:30 hợp lệ nhưng chồng 1 phút bị từ chối; token hết hạn đúng giây `exp`; `device_model` đúng 100 ký tự; đúng 8 yêu cầu đồng thời) và **dữ liệu sai** (thiếu trường, sai định dạng, mã không tồn tại, JSON hỏng, token sửa nội dung). Chạy lại lần hai: test kiểm tra `migrate` và `seed` hai lần không nhân đôi dữ liệu. Suy giảm có kiểm soát: test mô phỏng mất kết nối PostgreSQL và kiểm `503`.
+Mỗi nhóm có đủ ba loại tình huống: **luồng đúng** (phân công, đặt lịch, tạo phiếu thành công), **giá trị biên** (lịch liền kề 09:30 hợp lệ nhưng chồng 1 phút bị từ chối; token hết hạn đúng giây `exp`; `device_model` đúng 100 ký tự; đúng 8 yêu cầu đồng thời) và **dữ liệu sai** (thiếu trường, sai định dạng, mã không tồn tại, JSON hỏng, token sửa nội dung). Tài liệu API khớp với mã: `npm run check:docs` (đếm route trong `src/` và so với `docs/api-docs.md`). Chạy lại lần hai: test kiểm tra `migrate` và `seed` hai lần không nhân đôi dữ liệu. Suy giảm có kiểm soát: test mô phỏng mất kết nối PostgreSQL và kiểm `503`.
 
-## 7. Trạng thái chức năng (tag v0.2)
+## 7. Trạng thái chức năng (tag v1.0)
 
 | Hạng mục | Trạng thái |
 |----------|-----------|
@@ -197,13 +209,18 @@ Mỗi nhóm có đủ ba loại tình huống: **luồng đúng** (phân công, 
 | Đăng nhập demo, token 60 phút, phân quyền phía server (NFR3) | Xong |
 | CRUD phiếu bảo hành (tạo, sửa, xóa) | Xong ở mức API (không có màn hình nhập phiếu; TD-16) |
 | Giao diện | 4 màn hình bám wireframe M1–M3, mỗi màn hình đủ ba trạng thái (đang tải, rỗng, lỗi + *Thử lại*) |
+| Đóng gói và tài liệu kỹ thuật (BT3) | Xong: `Dockerfile`, `docker-compose.yml` có healthcheck và dữ liệu mẫu; Deployment Guide, checklist bảo mật, API docs |
 | Ngoài phạm vi | nhắc lịch qua SMS, tự động phân công, bảng tài khoản người dùng thật |
 
 ## 8. Tài liệu
 
 | Tệp | Nội dung |
 |-----|----------|
-| `docs/thay-doi-thiet-ke.md` | nhật ký thay đổi thiết kế so với BT1 (TD-01 … TD-19) và bảng tổng hợp |
+| `docs/thay-doi-thiet-ke.md` | nhật ký thay đổi thiết kế so với BT1 (TD-01 … TD-24) và bảng tổng hợp |
+| `docs/deployment-guide.md` | Deployment Guide tiếng Anh, năm mục (Requirements, Setup steps, Environment variables, Sample data, Verify it works) |
+| `docs/checklist-bao-mat.md` | checklist bảo mật bảy mục, mỗi mục một dòng minh chứng |
+| `docs/api-docs.md` | tài liệu API tiếng Anh: 15 endpoint, ví dụ chép từ lần chạy thật; `npm run check:docs` đối chiếu với mã |
+| `docs/test-plan.md`, `docs/test-report.md` | Test Plan và Test Report (12 test case, ảnh trong `docs/screenshots/`) |
 | `docs/ai-disclosure.md` | bảng khai báo sử dụng công cụ AI |
 | `docs/bug-log.md` | nhật ký lỗi đã gặp và cách gỡ (tái lập, khoanh vùng, sửa nguyên nhân, xác nhận) |
 | `docs/giai-thich-ham.md` | giải thích từng hàm trong dự án |
@@ -217,4 +234,5 @@ Mỗi nhóm có đủ ba loại tình huống: **luồng đúng** (phân công, 
 
 - `.env` không nằm trong repo (đã có trong `.gitignore`); `.env.example` chỉ có tên biến và giá trị mẫu.
 - Mã nguồn không chứa mật khẩu hay khóa thật: thiếu `DATABASE_URL` thì báo lỗi chỉ cách khắc phục; thiếu `JWT_SECRET` khi phát triển thì dùng khóa ngẫu nhiên cho lần chạy đó, còn khi `NODE_ENV=production` thì từ chối chạy.
+- Docker: image chạy bằng người dùng `node` (không phải root), cổng CSDL không mở ra máy chủ, `.dockerignore` loại `.env`. Checklist đầy đủ và các giới hạn đã biết: [`docs/checklist-bao-mat.md`](docs/checklist-bao-mat.md).
 - Commit theo Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`).
