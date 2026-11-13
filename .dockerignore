@@ -1,0 +1,19 @@
+# Keep secrets, history and large files out of the image build context.
+.git
+.gitignore
+.gitattributes
+.env
+.env.*
+!.env.example
+node_modules
+npm-debug.log*
+*.log
+*.zip
+*.pdf
+docs
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+.vscode
+coverage
